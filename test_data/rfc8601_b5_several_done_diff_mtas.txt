@@ -1,0 +1,27 @@
+Authentication-Results: example.com;
+          dkim=pass (good signature) header.d=example.com
+Received: from mail-router.example.com
+              (mail-router.example.com [192.0.2.1])
+          by auth-checker.example.com (8.11.6/8.11.6)
+              with ESMTP id i7PK0sH7021929;
+          Fri, Feb 15 2002 17:19:22 -0800
+DKIM-Signature:  v=1; a=rsa-sha256; s=gatsby; d=example.com;
+          t=1188964191; c=simple/simple; h=From:Date:To:Subject:
+          Message-Id:Authentication-Results;
+          bh=sEuZGD/pSr7ANysbY3jtdaQ3Xv9xPQtS0m70;
+          b=EToRSuvUfQVP3Bkz ... rTB0t0gYnBVCM=
+Authentication-Results: example.com;
+          auth=pass (cram-md5) smtp.auth=sender@example.com;
+          spf=fail smtp.mailfrom=example.com
+Received: from dialup-1-2-3-4.example.net
+              (dialup-1-2-3-4.example.net [192.0.2.200])
+          by mail-router.example.com (8.11.6/8.11.6)
+              with ESMTPA id g1G0r1kA003489;
+          Fri, Feb 15 2002 17:19:07 -0800
+From: sender@example.com
+Date: Fri, Feb 15 2002 16:54:30 -0800
+To: receiver@example.com
+Message-Id: <12345.abc@example.com>
+Subject: here's a sample
+
+Hello!  Goodbye!

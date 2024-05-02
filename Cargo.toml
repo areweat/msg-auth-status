@@ -1,0 +1,18 @@
+[package]
+name = "msg-auth-status"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mail-parser = { version = "0.9", default-features = false, optional = true }
+logos = { version = "0.14", default-features = false, features = ["export_derive"] }
+
+[dev-dependencies]
+insta = { version = "1.38" }
+rstest = { version = "0.19" }
+
+[features]
+default = ["alloc", "std"]
+std = ["mail-parser?/std", "logos?/std" ]
+alloc = []
+mail_parse = ["mail-parser"]

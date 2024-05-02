@@ -1,0 +1,13 @@
+Authentication-Results: example.org 1; none
+Received: from mail-router.example.com
+              (mail-router.example.com [192.0.2.1])
+          by server.example.org (8.11.6/8.11.6)
+              with ESMTP id g1G0r1kA003489;
+          Fri, Feb 15 2002 17:19:07 -0800
+From: sender@example.com
+Date: Fri, Feb 15 2002 16:54:30 -0800
+To: receiver@example.org
+Message-Id: <12345.abc@example.com>
+Subject: here's a sample
+
+Hello!  Goodbye!

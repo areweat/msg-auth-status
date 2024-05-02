@@ -1,0 +1,34 @@
+Authentication-Results: example.com;
+      dkim=pass reason="good signature"
+        header.i=@mail-router.example.net;
+      dkim=fail reason="bad signature"
+        header.i=@newyork.example.com
+Received: from mail-router.example.net
+          (mail-router.example.net [192.0.2.250])
+      by chicago.example.com (8.11.6/8.11.6)
+          for <recipient@chicago.example.com>
+          with ESMTP id i7PK0sH7021929;
+      Fri, Feb 15 2002 17:19:22 -0800
+DKIM-Signature: v=1; a=rsa-sha256; s=furble;
+      d=mail-router.example.net; t=1188964198; c=relaxed/simple;
+      h=From:Date:To:Message-Id:Subject:Authentication-Results;
+      bh=ftA9J6GtX8OpwUECzHnCkRzKw1uk6FNiLfJl5Nmv49E=;
+      b=oINEO8hgn/gnunsg ... 9n9ODSNFSDij3=
+Authentication-Results: example.net;
+      dkim=pass (good signature) header.i=@newyork.example.com
+Received: from smtp.newyork.example.com
+          (smtp.newyork.example.com [192.0.2.220])
+      by mail-router.example.net (8.11.6/8.11.6)
+          with ESMTP id g1G0r1kA003489;
+      Fri, Feb 15 2002 17:19:07 -0800
+DKIM-Signature: v=1; a=rsa-sha256; s=gatsby;
+      d=newyork.example.com;
+      t=1188964191; c=simple/simple;
+      h=From:Date:To:Message-Id:Subject;
+      bh=sEu28nfs9fuZGD/pSr7ANysbY3jtdaQ3Xv9xPQtS0m7=;
+      b=EToRSuvUfQVP3Bkz ... rTB0t0gYnBVCM=
+From: sender@newyork.example.com
+Date: Fri, Feb 15 2002 16:54:30 -0800
+To: meetings@example.net
+Message-Id: <12345.abc@newyork.example.com>
+Subject: here's a sample

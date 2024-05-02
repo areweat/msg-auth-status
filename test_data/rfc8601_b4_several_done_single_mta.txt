@@ -1,0 +1,19 @@
+Authentication-Results: example.com;
+          auth=pass (cram-md5) smtp.auth=sender@example.net;
+          spf=pass smtp.mailfrom=example.net
+Authentication-Results: example.com; iprev=pass
+          policy.iprev=192.0.2.200
+Received: from dialup-1-2-3-4.example.net (8.11.6/8.11.6)
+              (dialup-1-2-3-4.example.net [192.0.2.200])
+          by mail-router.example.com (8.11.6/8.11.6)
+              with ESMTPA id g1G0r1kA003489;
+          Fri, Feb 15 2002 17:19:07 -0800
+Date: Fri, Feb 15 2002 16:54:30 -0800
+To: receiver@example.com
+From: sender@example.net
+Message-Id: <12345.abc@example.net>
+Subject: here's a sample
+
+Hello!  Goodbye!
+
+        
