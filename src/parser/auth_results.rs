@@ -1,8 +1,25 @@
+use core::str::FromStr;
 use logos::Logos;
+//use strum_macros::{Display as StrumDisplay, EnumString};
+
+#[cfg(feature = "mail_parse")]
+use mail_parser::HeaderValue;
+
+#[derive(Debug)]
+pub enum ResultCodeError {
+    Parse,
+    InvalidDkimResult(String),
+    InvalidSpfResult(String),
+    InvalidIpRevResult(String),
+}
 
 /// DKIM Result Codes - s.2.7.1
-#[derive(Debug)]
+//#[derive(Debug, EnumString, StrumDisplay)]
+//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
+#[derive(Debug, Default)]
 pub enum DkimResultCode {
+    #[default]
+    Unknown,
     /// The message was not signed.
     NoneDkim,
     /// The message was signed, the signature or signatures were
@@ -31,10 +48,32 @@ pub enum DkimResultCode {
     PermError,
 }
 
+impl TryFrom<AuthResultToken<'_>> for DkimResultCode {
+    type Error = ResultCodeError;
+
+    fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
+        let res = match token {
+            AuthResultToken::NoneNone => Self::NoneDkim,
+            AuthResultToken::Pass => Self::Pass,
+            AuthResultToken::Fail => Self::Fail,
+            AuthResultToken::Policy => Self::Policy,
+            AuthResultToken::Neutral => Self::Neutral,
+            AuthResultToken::TempError => Self::TempError,
+            AuthResultToken::PermError => Self::PermError,
+            _ => return Err(ResultCodeError::InvalidDkimResult("".to_string())),
+        };
+        Ok(res)
+    }
+}
+
 /// SPF Result Codes - s.2.7.2
 /// SPF defined in RFC 7208 s.2.6 - Results evaluation
-#[derive(Debug)]
+//#[derive(Debug, EnumString, StrumDisplay)]
+//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
+#[derive(Debug, Default)]
 pub enum SpfResultCode {
+    #[default]
+    Unknown,
     /// Either (a) syntactically valid DNS domain name was extracted from the
     /// SMTP session that could be used as the one to be authorized, or (b) no
     /// SPF records were retrieved from the DNS.
@@ -68,9 +107,32 @@ pub enum SpfResultCode {
     PermError,
 }
 
+impl TryFrom<AuthResultToken<'_>> for SpfResultCode {
+    type Error = ResultCodeError;
+
+    fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
+        let res = match token {
+            AuthResultToken::NoneNone => Self::NoneSpf,
+            AuthResultToken::Pass => Self::Pass,
+            AuthResultToken::Fail => Self::Fail,
+            AuthResultToken::SoftFail => Self::SoftFail,
+            AuthResultToken::Policy => Self::Policy,
+            AuthResultToken::Neutral => Self::Neutral,
+            AuthResultToken::TempError => Self::TempError,
+            AuthResultToken::PermError => Self::PermError,
+            _ => return Err(ResultCodeError::InvalidSpfResult("".to_string())),
+        };
+        Ok(res)
+    }
+}
+
 /// IpRev Result Codes - s.2.7.3
-#[derive(Debug)]
+//#[derive(Debug, EnumString, StrumDisplay)]
+//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
+#[derive(Debug, Default)]
 pub enum IpRevResultCode {
+    #[default]
+    Unknown,
     /// The DNS evaluation succeeded, i.e., the "reverse" and
     /// "forward" lookup results were returned and were in agreement.
     Pass,
@@ -96,23 +158,242 @@ pub enum IpRevResultCode {
     PermError,
 }
 
+impl TryFrom<AuthResultToken<'_>> for IpRevResultCode {
+    type Error = ResultCodeError;
+
+    fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
+        let res = match token {
+            AuthResultToken::Pass => Self::Pass,
+            AuthResultToken::Fail => Self::Fail,
+            AuthResultToken::TempError => Self::TempError,
+            AuthResultToken::PermError => Self::PermError,
+            _ => return Err(ResultCodeError::InvalidIpRevResult("".to_string())),
+        };
+        Ok(res)
+    }
+}
+
+// TODO: Create separate tokenisers for hostname etc. w/o regexing MVP here.
 #[derive(Debug, Logos)]
 #[logos(skip r"[ \r\n]+")]
-enum AuthResultToken<'hdr> {
-    #[regex(r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$", |lex| lex.slice())]
-    Hostname(&'hdr str),
+pub enum AuthResultToken<'hdr> {
+    #[token("none")]
+    NoneNone,
+
+    // This also matches foo..bar - logos regex is limited - needs additional validation
+    #[regex(r"([A-Za-z0-9][A-Za-z0-9\.\-]+)", |lex| lex.slice())]
+    MaybeHostname(&'hdr str),
+
+    // https://stackoverflow.com/questions/5284147/validating-ipv4-addresses-with-regexp
+    // logos does not support lookahead
+    #[regex(r"((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)", |lex| lex.slice())]
+    MaybeIPv4Addr(&'hdr str),
+
+    // https://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
+    // Too complex for logos regex, do separate validation
+    #[regex(r"[A-F0-9]:[A-F0-9:]+", |lex| lex.slice())]
+    MaybeIPv6Addr(&'hdr str),
+
+    #[token("1")]
+    VersionOne,
 
     #[token(";")]
     FieldSeparator,
 
-    #[token(r"^dkim=(fail|neutral|none|pass|permerror|policy|temperror)", |lex| lex.slice().parse::<DkimStatusCode>)]
-    DkimStatus(DkimStatusCode),
+    #[token("dkim")]
+    Dkim,
 
-    #[token(r"^spf=(none|pass|fail|softfail|policy|neutral|temperror|permerror)", |lex| lex.slice().parse::<SpfCode>)]
-    SpfStatus(SpfStatusCode),
+    #[token("spf")]
+    Spf,
 
-    #[token(r"^spf=(pass|fail|temperror|permerror)", |lex| lex.slice().parse::<ipRevCode>)]
-    IpRevStatus(IpRevStatusCode),    
-    
+    #[token("iprev")]
+    IpRev,
+
+    #[token("softfail")]
+    SoftFail,
+
+    #[token("fail")]
+    Fail,
+
+    #[token("neutral")]
+    Neutral,
+
+    #[token("pass")]
+    Pass,
+
+    #[token("temperror")]
+    TempError,
+
+    #[token("permerror")]
+    PermError,
+
+    #[token("policy")]
+    Policy,
+
+    #[token("=")]
+    Equal,
+    /* bah logos didn't do captures :)
+    #[regex(r"dkim=(fail|neutral|none|pass|permerror|policy|temperror)", |lex| DkimResultCode::from_str(lex.slice()).unwrap_or_default())]
+    DkimStatus(DkimResultCode),
+
+    #[regex(r"spf=(none|pass|fail|softfail|policy|neutral|temperror|permerror)", |lex| SpfResultCode::from_str(lex.slice()).unwrap_or_default())]
+    SpfStatus(SpfResultCode),
+
+    #[regex(r"iprev=(pass|fail|temperror|permerror)", |lex| IpRevResultCode::from_str(lex.slice()).unwrap_or_default())]
+    IpRevStatus(IpRevResultCode),
+    */
 }
-    
+
+#[derive(Debug, Default)]
+pub struct SpfResult<'hdr> {
+    code: SpfResultCode,
+    reason: Option<&'hdr str>,
+    header_i: Option<&'hdr str>,
+}
+
+#[derive(Debug, Default)]
+pub struct DkimResult<'hdr> {
+    code: DkimResultCode,
+    reason: Option<&'hdr str>,
+    //    header_i: Option<&'hdr str>,
+}
+
+#[derive(Debug, Default)]
+pub struct IpRevResult<'hdr> {
+    code: IpRevResultCode,
+    reason: Option<&'hdr str>,
+    //    header_i: Option<&'hdr str>,
+}
+
+#[derive(Debug, Default)]
+pub struct AuthenticationResults<'hdr> {
+    a: Option<&'hdr str>,
+    host: Option<&'hdr str>,
+    spf_result: Vec<SpfResult<'hdr>>,
+    dkim_result: Vec<DkimResult<'hdr>>,
+    iprev_result: Vec<IpRevResult<'hdr>>,
+    none_done: bool,
+}
+
+#[derive(Debug, PartialEq)]
+enum Stage {
+    WantHost,
+    SawHost,
+    WantIdentifier,
+    WantSpfEqual,
+    WantSpfResult,
+    GotSpfResult,
+    WantDkimEqual,
+    WantDkimResult,
+    GotDkimResult,
+    WantIpRevEqual,
+    WantIpRevResult,
+    GotIpRevResult,
+}
+
+impl<'hdr> From<&HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
+    fn from(hval: &HeaderValue<'hdr>) -> Self {
+        let text = hval.as_text().unwrap();
+        let mut lexer = AuthResultToken::lexer(&text);
+
+        let mut res = Self::default();
+
+        let mut stage = Stage::WantHost;
+
+        let mut cur_spf = SpfResult::default();
+        let mut cur_dkim = DkimResult::default();
+        let mut cur_iprev = IpRevResult::default();
+
+        while let Some(token) = lexer.next() {
+            match token {
+                Ok(AuthResultToken::MaybeHostname(ref host)) => {
+                    if stage == Stage::WantHost {
+                        res.host = Some(host);
+                        stage = Stage::SawHost;
+                    } else {
+                        panic!("Invalid Hostname token at Stage {:?}", stage);
+                    }
+                }
+                Ok(AuthResultToken::VersionOne) => {
+                    // ..
+                }
+                Ok(AuthResultToken::FieldSeparator) => {
+                    // ..
+                    stage = Stage::WantIdentifier;
+                }
+                Ok(AuthResultToken::NoneNone) => {
+                    if stage == Stage::WantIdentifier {
+                        res.none_done = true;
+                    }
+                }
+                Ok(AuthResultToken::Spf) => {
+                    if stage == Stage::WantIdentifier {
+                        stage = Stage::WantSpfEqual;
+                    } else {
+                        panic!("Invalid Spf token at Stage {:?}", stage);
+                    }
+                }
+                Ok(AuthResultToken::Dkim) => {
+                    if stage == Stage::WantIdentifier {
+                        stage = Stage::WantDkimEqual;
+                    } else {
+                        panic!("Invalid Dkim token at Stage {:?}", stage);
+                    }
+                }
+                Ok(AuthResultToken::IpRev) => {
+                    if stage == Stage::WantIdentifier {
+                        stage = Stage::WantIpRevEqual;
+                    } else {
+                        panic!("Invalid IpRev token at Stage {:?}", stage);
+                    }
+                }
+                Ok(AuthResultToken::Equal) => {
+                    stage = match stage {
+                        Stage::WantSpfEqual => Stage::WantSpfResult,
+                        Stage::WantDkimEqual => Stage::WantDkimEqual,
+                        Stage::WantIpRevEqual => Stage::WantIpRevEqual,
+                        _ => {
+                            panic!("Invalid Equal token at Stage {:?}", stage);
+                        }
+                    };
+                }
+                // Result possible for all
+                Ok(
+                    AuthResultToken::Pass
+                    | AuthResultToken::Fail
+                    | AuthResultToken::TempError
+                    | AuthResultToken::PermError,
+                ) => {
+                    let ok_token = token.expect("bug");
+                    stage = match stage {
+                        Stage::WantSpfResult => {
+                            //let spf_res: Result<SpfResult<'hdr>, ResultCodeError> = token.expect("BUG").into();
+                            let spf_res = SpfResultCode::try_from(ok_token);
+                            match spf_res {
+                                Ok(res) => {
+                                    cur_spf = SpfResult::default();
+                                    cur_spf.code = res;
+                                }
+                                Err(e) => panic!("Invalid SPF result"),
+                            }
+                            Stage::GotSpfResult
+                        }
+                        Stage::WantDkimResult => Stage::GotDkimResult,
+                        Stage::WantIpRevResult => Stage::GotIpRevResult,
+                        _ => {
+                            panic!("Invalid Pass token at Stage {:?}", stage);
+                        }
+                    };
+                }
+                Ok(_) => {
+                    panic!("Ok got Token {:?} on {:?}", token, text);
+                }
+                Err(_) => {
+                    panic!("Unexpected token {:?} on {:?}", lexer.span(), text);
+                }
+            }
+        }
+        panic!("res = {:?}", res);
+        res;
+    }
+}
