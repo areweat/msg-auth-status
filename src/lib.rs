@@ -31,7 +31,7 @@ impl<'hdr> MessageAuthStatus {
         };
         let auth_results: Vec<AuthenticationResults<'_>> = parsed
             .header_values("Authentication-Results")
-            .map(|mh| mh.into())
+            .map(|mh| mh.try_into().unwrap())
             .collect();
         panic!("{:?}", auth_results);
         //panic!("{:?}", parsed.header_values("DKIM-Signature").join(","));
