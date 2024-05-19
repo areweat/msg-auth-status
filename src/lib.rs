@@ -7,10 +7,11 @@
 )]
 #![doc = include_str!("../README.md")]
 
+pub mod dkim;
+pub mod spf;
+
 mod parser;
-pub use parser::auth_results::{
-    AuthenticationResults, DkimResultCode, IpRevResultCode, SpfResultCode,
-};
+pub use parser::auth_results::{AuthenticationResults, IpRevResultCode};
 
 #[derive(Debug)]
 pub struct MessageAuthStatus {}

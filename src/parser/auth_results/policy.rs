@@ -20,7 +20,7 @@ pub enum PolicyToken<'hdr> {
     Empty(&'hdr str),
 }
 
-pub(super) fn parse_policy<'hdr>(
+pub fn parse_policy<'hdr>(
     lexer: &mut Lexer<'hdr, PolicyToken<'hdr>>,
 ) -> Result<&'hdr str, ResultCodeError> {
     let mut res_policy: Option<&'hdr str> = None;

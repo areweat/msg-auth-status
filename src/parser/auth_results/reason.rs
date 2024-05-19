@@ -11,7 +11,7 @@ pub enum ReasonToken<'hdr> {
     DoubleQuote,
 }
 
-pub(super) fn parse_reason<'hdr>(
+pub fn parse_reason<'hdr>(
     lexer: &mut Lexer<'hdr, ReasonToken<'hdr>>,
 ) -> Result<&'hdr str, ResultCodeError> {
     let mut res_reason: Option<&'hdr str> = None;
