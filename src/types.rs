@@ -21,3 +21,9 @@ pub struct AuthenticationResults<'hdr> {
     pub iprev_result: Vec<IpRevResult<'hdr>>,
     pub none_done: bool,
 }
+
+#[derive(Debug)]
+pub struct HostVersion<'hdr> {
+    pub host: &'hdr str,
+    pub version: Option<u32>,
+}

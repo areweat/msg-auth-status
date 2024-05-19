@@ -1,6 +1,8 @@
-use core::str::FromStr;
+//! Parsing for Auth Results using Logos
+
+//use core::str::FromStr;
 use logos::{Lexer, Logos};
-use strum_macros::{Display as StrumDisplay, EnumString};
+//use strum_macros::{Display as StrumDisplay, EnumString};
 
 use crate::auth::{SmtpAuthResult, SmtpAuthResultCode};
 use crate::dkim::{DkimResult, DkimResultCode};
@@ -9,12 +11,14 @@ use crate::spf::{SpfResult, SpfResultCode};
 use crate::AuthenticationResults;
 
 mod comment;
+mod host_version;
 mod policy;
 mod ptypes;
 mod reason;
 mod version;
 
 use comment::{parse_comment, CommentToken};
+use host_version::{parse_host_version, HostVersionToken};
 use policy::{parse_policy, PolicyToken};
 use ptypes::{parse_ptype_properties, PtypeToken};
 use reason::{parse_reason, ReasonToken};
@@ -110,95 +114,6 @@ impl TryFrom<AuthResultToken<'_>> for IpRevResultCode {
             _ => return Err(ResultCodeError::InvalidIpRevResult("".to_string())),
         };
         Ok(res)
-    }
-}
-
-#[derive(Debug, Logos)]
-#[logos(skip r"[ \r\n]+")]
-pub enum HostnameFieldToken<'hdr> {
-    #[token(";", priority = 1)]
-    FieldSeparator,
-
-    // https://stackoverflow.com/questions/5284147/validating-ipv4-addresses-with-regexp
-    // logos does not support lookahead
-    #[regex(r"((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)", |lex| lex.slice(), priority = 1)]
-    MaybeIPv4Addr(&'hdr str),
-
-    // https://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
-    // Too complex for logos regex, do separate validation
-    #[regex(r"[A-F0-9]:[A-F0-9:]+", |lex| lex.slice(), priority = 2)]
-    MaybeIPv6Addr(&'hdr str),
-
-    // This also matches foo..bar - logos regex is limited - needs additional validation
-    #[regex(r"([A-Za-z0-9][A-Za-z0-9\.\-]+)", |lex| lex.slice(), priority = 3)]
-    MaybeHostname(&'hdr str),
-
-    #[token("1", priority = 4)]
-    VersionOne,
-
-    #[token("(", priority = 5)]
-    CommentStart,
-}
-
-#[derive(Debug)]
-pub struct HostVer<'hdr> {
-    host: &'hdr str,
-    version: Option<u32>,
-}
-
-fn parse_host_ver<'hdr>(
-    lexer: &mut Lexer<'hdr, HostnameFieldToken<'hdr>>,
-) -> Result<HostVer<'hdr>, ResultCodeError> {
-    let mut maybe_host: Option<&'hdr str> = None;
-    let mut maybe_version: Option<u32> = None;
-
-    let mut stage = Stage::WantHost;
-
-    while let Some(token) = lexer.next() {
-        match token {
-            Ok(
-                HostnameFieldToken::MaybeHostname(host)
-                | HostnameFieldToken::MaybeIPv4Addr(host)
-                | HostnameFieldToken::MaybeIPv6Addr(host),
-            ) => {
-                if stage == Stage::WantHost {
-                    maybe_host = Some(host);
-                    stage = Stage::SawHost;
-                } else {
-                    return Err(ResultCodeError::ParseHost(
-                        "Hostname appearing twice?".to_string(),
-                    ));
-                }
-            }
-            Ok(HostnameFieldToken::VersionOne) => {
-                maybe_version = Some(1);
-            }
-            Ok(HostnameFieldToken::FieldSeparator) => {
-                break;
-            }
-            Ok(HostnameFieldToken::CommentStart) => {
-                let mut comment_lexer = CommentToken::lexer(lexer.remainder());
-                match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
-                    Err(e) => return Err(e),
-                }
-                *lexer = HostnameFieldToken::lexer(comment_lexer.remainder());
-            }
-            _ => panic!(
-                "parse_host_ver -- Invalid token {:?} - span = {:?} - source = {:?}",
-                token,
-                lexer.span(),
-                lexer.source()
-            ),
-        }
-    }
-
-    match maybe_host {
-        Some(host) => Ok(HostVer {
-            host,
-            version: maybe_version,
-        }),
-        None => Err(ResultCodeError::NoHostname),
     }
 }
 
@@ -406,9 +321,9 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
     fn try_from(hval: &'hdr HeaderValue<'hdr>) -> Result<Self, Self::Error> {
         let text = hval.as_text().unwrap();
 
-        let mut host_lexer = HostnameFieldToken::lexer(&text);
+        let mut host_lexer = HostVersionToken::lexer(&text);
 
-        let host = match parse_host_ver(&mut host_lexer) {
+        let host = match parse_host_version(&mut host_lexer) {
             Ok(host) => host,
             Err(e) => {
                 return Err(e);

@@ -9,7 +9,7 @@
 
 mod types;
 
-pub use types::AuthenticationResults;
+pub use types::{AuthenticationResults, HostVersion};
 
 pub mod auth {
     pub use crate::types::auth::*;
