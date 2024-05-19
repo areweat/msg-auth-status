@@ -2,7 +2,11 @@ use core::str::FromStr;
 use logos::{Lexer, Logos};
 use strum_macros::{Display as StrumDisplay, EnumString};
 
-use crate::dkim::*;
+use crate::auth::{SmtpAuthResult, SmtpAuthResultCode};
+use crate::dkim::{DkimResult, DkimResultCode};
+use crate::iprev::{IpRevResult, IpRevResultCode};
+use crate::spf::{SpfResult, SpfResultCode};
+use crate::AuthenticationResults;
 
 mod comment;
 mod policy;
@@ -41,28 +45,6 @@ pub enum ResultCodeError {
     UnexpectedForwardSlash,
 }
 
-/// SMTP AUTH Result Codes - s.2.7.4
-/// This SMTP Authentication (not DKIM)
-//#[derive(Debug, Default, EnumString, StrumDisplay)]
-//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
-#[derive(Debug, Default)]
-pub enum SmtpAuthResultCode {
-    #[default]
-    Unknown,
-    /// SMTP authentication was not attempted.
-    NoneSmtp,
-    /// The SMTP client authenticated to the server
-    Pass,
-    /// The SMTP client attempted to authenticate but was not successful
-    Fail,
-    /// The SMTP client attempted to authenticate but was not able to complete
-    /// the attempt due to some error that is likely transient in nature
-    TempError,
-    /// The SMTP client attempted to authenticate but was not able to complete
-    /// the attempt due to some error that is likely not transient in nature
-    PermError,
-}
-
 impl TryFrom<AuthResultToken<'_>> for SmtpAuthResultCode {
     type Error = ResultCodeError;
 
@@ -78,9 +60,6 @@ impl TryFrom<AuthResultToken<'_>> for SmtpAuthResultCode {
         Ok(res)
     }
 }
-
-use crate::dkim::*;
-use crate::spf::*;
 
 impl TryFrom<AuthResultToken<'_>> for DkimResultCode {
     type Error = ResultCodeError;
@@ -117,38 +96,6 @@ impl TryFrom<AuthResultToken<'_>> for SpfResultCode {
         };
         Ok(res)
     }
-}
-
-/// IpRev Result Codes - s.2.7.3
-//#[derive(Debug, Default, EnumString, StrumDisplay)]
-//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
-#[derive(Debug, Default)]
-pub enum IpRevResultCode {
-    #[default]
-    Unknown,
-    /// The DNS evaluation succeeded, i.e., the "reverse" and
-    /// "forward" lookup results were returned and were in agreement.
-    Pass,
-    /// The DNS evaluation failed.  In particular, the "reverse" and
-    /// "forward" lookups each produced results, but they were not in
-    /// agreement, or the "forward" query completed but produced no
-    /// result, e.g., a DNS RCODE of 3, commonly known as NXDOMAIN, or an
-    /// RCODE of 0 (NOERROR) in a reply containing no answers, was
-    /// returned.
-    Fail,
-    /// The DNS evaluation could not be completed due to some
-    /// error that is likely transient in nature, such as a temporary DNS
-    /// error, e.g., a DNS RCODE of 2, commonly known as SERVFAIL, or
-    /// other error condition resulted.  A later attempt may produce a
-    /// final result.
-    TempError,
-    /// The DNS evaluation could not be completed because no PTR
-    /// data are published for the connecting IP address, e.g., a DNS
-    /// RCODE of 3, commonly known as NXDOMAIN, or an RCODE of 0 (NOERROR)
-    /// in a reply containing no answers, was returned.  This prevented
-    /// completion of the evaluation.  A later attempt is unlikely to
-    /// produce a final result.
-    PermError,
 }
 
 impl TryFrom<AuthResultToken<'_>> for IpRevResultCode {
@@ -323,53 +270,6 @@ pub enum AuthResultToken<'hdr> {
     CommentStart,
 
     SuperDumbPlaceholder(&'hdr str),
-}
-
-#[derive(Debug, Default)]
-pub struct SmtpAuthResult<'hdr> {
-    code: SmtpAuthResultCode,
-    smtp_auth: Option<&'hdr str>,
-    mail_from: Option<&'hdr str>,
-}
-
-/*
-#[derive(Debug, Default)]
-pub struct SpfResult<'hdr> {
-    code: SpfResultCode,
-    reason: Option<&'hdr str>,
-    smtp_mailfrom: Option<&'hdr str>,
-    smtp_helo: Option<&'hdr str>,
-}
-*/
-
-/*
-#[derive(Debug, Default)]
-pub struct DkimResult<'hdr> {
-    code: DkimResultCode,
-    reason: Option<&'hdr str>,
-    header_d: Option<&'hdr str>,
-    header_i: Option<&'hdr str>,
-    header_b: Option<&'hdr str>,
-    header_a: Option<DkimAlgorithm<'hdr>>,
-    header_s: Option<&'hdr str>,
-} */
-
-#[derive(Debug, Default)]
-pub struct IpRevResult<'hdr> {
-    code: IpRevResultCode,
-    reason: Option<&'hdr str>,
-    //    header_i: Option<&'hdr str>,
-}
-
-#[derive(Debug, Default)]
-pub struct AuthenticationResults<'hdr> {
-    a: Option<&'hdr str>,
-    host: Option<&'hdr str>,
-    smtp_auth_result: Vec<SmtpAuthResult<'hdr>>,
-    spf_result: Vec<SpfResult<'hdr>>,
-    dkim_result: Vec<DkimResult<'hdr>>,
-    iprev_result: Vec<IpRevResult<'hdr>>,
-    none_done: bool,
 }
 
 #[derive(Debug, PartialEq)]

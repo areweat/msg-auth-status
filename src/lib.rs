@@ -7,11 +7,27 @@
 )]
 #![doc = include_str!("../README.md")]
 
-pub mod dkim;
-pub mod spf;
+mod types;
+
+pub use types::AuthenticationResults;
+
+pub mod auth {
+    pub use crate::types::auth::*;
+}
+
+pub mod dkim {
+    pub use crate::types::dkim::*;
+}
+
+pub mod iprev {
+    pub use crate::types::iprev::*;
+}
+
+pub mod spf {
+    pub use crate::types::spf::*;
+}
 
 mod parser;
-pub use parser::auth_results::{AuthenticationResults, IpRevResultCode};
 
 #[derive(Debug)]
 pub struct MessageAuthStatus {}
