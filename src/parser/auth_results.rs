@@ -154,6 +154,10 @@ pub enum AuthResultToken<'hdr> {
     #[token("reason", priority = 2)]
     Reason,
 
+    #[token("policy", priority = 3)]
+    Policy,
+
+    /*
     #[token("smtp.auth", priority = 2)]
     SmtpDotAuth,
     #[token("smtp.helo", priority = 2)]
@@ -166,28 +170,27 @@ pub enum AuthResultToken<'hdr> {
     HeaderDotD,
     #[token("header.i", priority = 2)]
     HeaderDotI,
-    #[token("policy", priority = 3)]
-    Policy,
 
     #[token("\\", priority = 3)]
     BackQuote,
 
     #[token("\"", priority = 3)]
     DoubleQuote,
-
+     */
     #[token(";", priority = 5)]
     FieldSeparator,
 
+    /*
     #[token(".", priority = 5)]
     Dot,
-
+    */
     #[token("(", priority = 6)]
     CommentStart,
 
     SuperDumbPlaceholder(&'hdr str),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum Stage {
     WantHost,
     SawHost,
@@ -236,7 +239,9 @@ enum Stage {
     GotReason,
 }
 
+// State machine helpers
 impl Stage {
+    // Is the current token GotResult
     fn got_result(&self) -> bool {
         match self {
             Self::GotAuthResult
@@ -245,6 +250,49 @@ impl Stage {
             | Self::GotIpRevResult => true,
             _ => false,
         }
+    }
+    // Is the current stage expecting resultset status
+    fn is_cur_expect_resultset_want(&self) -> bool {
+        match self {
+            Self::WantAuthResult
+            | Self::WantSpfResult
+            | Self::WantDkimResult
+            | Self::WantIpRevResult => true,
+            _ => false,
+        }
+    }
+    // Is the current stage expecting something after resulset
+    fn is_cur_expect_resultset_got(&self) -> bool {
+        match self {
+            Self::GotAuthResult
+            | Self::GotSpfResult
+            | Self::GotDkimResult
+            | Self::GotIpRevResult => true,
+            _ => false,
+        }
+    }
+    // Is the current stage expecting '=' equal for a result set
+    fn is_cur_expect_resultset_equal(&self) -> bool {
+        match self {
+            Self::WantAuthEqual
+            | Self::WantSpfEqual
+            | Self::WantDkimEqual
+            | Self::WantIpRevEqual => true,
+            _ => false,
+        }
+    }
+    // Reflect the relevant Result for given WantEqual
+    fn equal_to_result(&mut self) -> bool {
+        let new_stage = match self {
+            Stage::WantAuthEqual => Stage::WantAuthResult,
+            Stage::WantSpfEqual => Stage::WantSpfResult,
+            Stage::WantDkimEqual => Stage::WantDkimResult,
+            Stage::WantIpRevEqual => Stage::WantIpRevResult,
+            _ => return false,
+        };
+        *self = new_stage;
+        true
+        //Some(new_stage)
     }
 }
 
@@ -310,7 +358,7 @@ fn assign_result_code<'hdr>(
             AuthResultToken::Policy => panic!("Bingo.."),
             _ => panic!("Nope. Token really was ... {:?}", token),
         },
-        _ => Err(ResultCodeError::InvalidResultStage(stage)),
+        _ => Err(ResultCodeError::InvalidResultStage(stage.clone())),
     }
     //panic!("assign_result_code Token: {:?} - stage: {:?} - cur_res = {:?}", token, stage, cur_res);
 }
@@ -338,9 +386,6 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
         while let Some(token) = lexer.next() {
             match token {
                 Ok(AuthResultToken::FieldSeparator) if stage.got_result() => {
-                    //                    match stage {
-                    //                        GotAuthResult | GotSpfResult | GotDkimResult | GotIpRevResult => {
-                    // ..
                     stage = Stage::WantIdentifier;
                     panic!(
                                 "OK TODO fieldSeparator Current_res at field sep = {:?} .. save it - span - {:?}, text - {:?}",
@@ -349,76 +394,44 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                                 text
                             );
                     cur_res = ParseCurrentResultCode::default();
-                    //                        }
-                    //                        _ => {
-                    //                            panic!("Invalid fieldSeparator after Stage {:?} - span: {:?} - text: {:?}", stage, lexer.span(), text);
-                    //                        },
                 }
                 Ok(AuthResultToken::NoneNone) if stage == Stage::WantIdentifier => {
                     res.none_done = true;
                 }
-                Ok(AuthResultToken::Auth) => {
-                    if stage == Stage::WantIdentifier {
-                        stage = Stage::WantAuthEqual;
-                    } else {
-                        panic!("Invalid Auth token at Stage {:?}", stage);
-                    }
+                Ok(AuthResultToken::Auth) if stage == Stage::WantIdentifier => {
+                    stage = Stage::WantAuthEqual;
                 }
-                Ok(AuthResultToken::Spf) => {
-                    if stage == Stage::WantIdentifier {
-                        stage = Stage::WantSpfEqual;
-                    } else {
-                        panic!("Invalid Spf token at Stage {:?}", stage);
-                    }
+                Ok(AuthResultToken::Spf) if stage == Stage::WantIdentifier => {
+                    stage = Stage::WantSpfEqual;
                 }
-                Ok(AuthResultToken::Dkim) => {
-                    if stage == Stage::WantIdentifier {
-                        stage = Stage::WantDkimEqual;
-                    } else {
-                        panic!("Invalid Dkim token at Stage {:?}", stage);
-                    }
+                Ok(AuthResultToken::Dkim) if stage == Stage::WantIdentifier => {
+                    stage = Stage::WantDkimEqual;
                 }
-                Ok(AuthResultToken::IpRev) => {
-                    if stage == Stage::WantIdentifier {
-                        stage = Stage::WantIpRevEqual;
-                    } else {
-                        panic!("Invalid IpRev token at Stage {:?}", stage);
-                    }
+                Ok(AuthResultToken::IpRev) if stage == Stage::WantIdentifier => {
+                    stage = Stage::WantIpRevEqual;
                 }
-                Ok(AuthResultToken::Equal) => {
-                    stage = match stage {
-                        Stage::WantAuthEqual => Stage::WantAuthResult,
-                        Stage::WantSpfEqual => Stage::WantSpfResult,
-                        Stage::WantDkimEqual => Stage::WantDkimResult,
-                        Stage::WantIpRevEqual => Stage::WantIpRevResult,
-                        Stage::WantReasonEqual => {
-                            let mut reason_lexer: Lexer<'hdr, ReasonToken<'hdr>> = lexer.morph();
-                            //let mut reason_lexer = ReasonToken::lexer(lexer.remainder());
-                            let reason_res = match parse_reason(&mut reason_lexer) {
-                                Err(e) => return Err(e),
-                                Ok(reason) => reason,
-                            };
-                            lexer = reason_lexer.morph();
-                            //lexer = AuthResultToken::lexer(reason_lexer.remainder());
-                            Stage::GotReason
-                        }
-                        _ => {
-                            panic!("Invalid Equal token at Stage {:?}", stage);
-                        }
+                Ok(AuthResultToken::Equal) if stage.is_cur_expect_resultset_equal() => {
+                    stage.equal_to_result();
+                }
+                Ok(AuthResultToken::Equal) if stage == Stage::WantReasonEqual => {
+                    let mut reason_lexer: Lexer<'hdr, ReasonToken<'hdr>> = lexer.morph();
+                    let reason_res = match parse_reason(&mut reason_lexer) {
+                        Err(e) => return Err(e),
+                        Ok(reason) => reason,
                     };
+                    lexer = reason_lexer.morph();
+                    stage = Stage::GotReason;
                 }
                 Ok(AuthResultToken::Reason) => {
                     stage = Stage::WantReasonEqual;
                 }
                 Ok(AuthResultToken::Policy) => {
-                    //let mut policy_lexer = PolicyToken::lexer(lexer.remainder());
                     let mut policy_lexer: Lexer<'hdr, PolicyToken<'hdr>> = lexer.morph();
                     let policy = match parse_policy(&mut policy_lexer) {
                         Ok(policy) => policy,
                         Err(e) => return Err(e),
                     };
                     lexer = policy_lexer.morph();
-                    //lexer = AuthResultToken::lexer(policy_lexer.remainder());
                 }
                 Ok(
                     AuthResultToken::Pass
@@ -427,20 +440,22 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     | AuthResultToken::PermError
                     | AuthResultToken::NoneNone
                     | AuthResultToken::Neutral,
-                ) => {
-                    stage = match assign_result_code(
+                ) if stage.is_cur_expect_resultset_want() => {
+                    let new_stage = match assign_result_code(
                         token.expect("BUG: Matched err?!"),
-                        stage,
+                        stage.clone(),
                         &mut cur_res,
                     ) {
                         Err(e) => return Err(e),
                         Ok(new_stage) => new_stage,
                     };
+
+                    let mut ptype_lexer = PtypeToken::lexer(lexer.remainder());
                 }
                 Ok(AuthResultToken::ForwardSlash) => {
                     let mut version_lexer = VersionToken::lexer(lexer.remainder());
-                    //let mut version_lexer: Lexer<'hdr, VersionToken<'hdr>> = lexer.morph();
 
+                    /*
                     let new_stage = match stage {
                         Stage::WantAuthEqual => Stage::WantAuthResult,
                         Stage::WantSpfEqual => Stage::WantSpfResult,
@@ -449,34 +464,40 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                         _ => {
                             return Err(ResultCodeError::UnexpectedForwardSlash);
                         }
-                    };
+                    }; */
 
                     let version_res = match parse_version(&mut version_lexer) {
                         Ok(version) => version,
                         Err(e) => return Err(e),
                     };
-                    stage = new_stage;
+                    //stage = new_stage;
                     lexer.bump(version_lexer.span().end);
                 }
                 Ok(AuthResultToken::CommentStart) => {
-                    //let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                     let mut comment_lexer: Lexer<'hdr, CommentToken<'hdr>> = lexer.morph();
                     match parse_comment(&mut comment_lexer) {
                         Ok(comment) => {}
                         Err(e) => return Err(e),
                     }
                     lexer = comment_lexer.morph();
-                    //lexer = AuthResultToken::lexer(comment_lexer.remainder());
                 }
                 Ok(_) => {
-                    panic!("Ok got Token {:?} on {:?}", token, text);
+                    panic!(
+                        "TODO stage({:?}) - Ok got Token {:?} span {:?} - source{:?}",
+                        stage,
+                        token,
+                        lexer.span(),
+                        lexer.source()
+                    );
                 }
                 Err(_) => {
+                    let cut_slice = &lexer.source()[lexer.span().start..];
                     panic!(
-                        "Unexpected token {:?} source {:?} on full {:?}",
+                        "Unrecognised at stage({:?}) span {:?} source {:?} - Clip: {:?}",
+                        stage,
                         lexer.span(),
                         lexer.source(),
-                        text
+                        cut_slice,
                     );
                 }
             }
