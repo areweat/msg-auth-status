@@ -16,14 +16,13 @@ pub enum DkimProperty<'hdr> {
 
 /// IANA Email Authentication Methods ptype / property Mapping stages
 #[derive(Debug)]
-pub enum DkimPtype {
-    Header,
-    HeaderDot,
-    HeaderDotD,
-    HeaderDotI,
-    HeaderDotB,
-    HeaderDotA,
-    HeaderDotS,
+pub enum DkimPropertyKey {
+    TagD,
+    TagI,
+    TagB,
+    TagA,
+    TagS,
+    Rfc5322From,
 }
 
 /// The 'q' Tag - see RFC 6376 s. 3.5
@@ -74,4 +73,68 @@ pub enum DkimHeader<'hdr> {
     Atpsh(&'hdr str),
     /// RFC 6651
     R(&'hdr str),
+}
+
+//----------
+// Parsing dkim property & val
+// https://www.iana.org/assignments/email-auth/email-auth.xhtml
+//----------
+
+use super::ResultCodeError;
+use super::ResultCodeError;
+use super::{parse_comment, CommentToken};
+
+use logos::{Lexer, Logos};
+
+#[derive(Debug, Logos)]
+pub enum DkimPropertyKeyToken<'hdr> {
+    #[token("(", priority = 2)]
+    CommentStart,
+
+    #[token("d", priority = 1)]
+    TagD,
+
+    #[token("i", priority = 1)]
+    TagI,
+
+    #[token("b", priority = 1)]
+    TagB,
+
+    #[token("a", priority = 1)]
+    TagA,            
+
+    #[token("s", priority = 1)]
+    TagS,
+
+    #[token("from", priority = 1)]
+    Rfc5322From,
+}
+
+pub fn parse_dkim_property_key<'hdr>(
+    lexer: &mut Lexer<'hdr, DkimPropertyToken<'hdr>>,
+) -> Result<DkimPtype, ResultCodeError> {
+    while let Some(token) = lexer.next() {
+        match token {
+            Ok(DkimPropertyKeyToken::TagD | DkimPropertyKeyToken::TagI | DkimPropertyKeyToken::TagB | DkimPropertyKeyToken::TagA | DkimPropertyKeyToken::TagS | DkimPropertyKeyToken::Rfc5322From) {
+                let property = token.map_err(|_| ResultCodeError::ParsePtypeBugPropertyGating)?;
+                let mapped_property_res: Result<DkimPropertyKey, ResultCodeError> = property.try_into();
+                let mapped_property = mapped.property_res.map_err(ResultCodeError::ParsePtypeBugInvalidProperty)?;
+                return Ok(mapped_property);
+            },
+            _ => {
+                let cut_slice = &lexer.source()[lexer.span().start..];
+                let cut_span = &lexer.source()[lexer.span().start .. lexer.span().end];
+
+                panic!(
+                    "parse_dkim_property_key({:?}) -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
+                    token,
+                    lexer.span(),
+                    lexer.source(),
+                    cut_span,
+	                cut_slice,
+                );
+            }
+        }
+    }
+    Err(ResultCodeError::RunAwayDkimPropertyKey)
 }

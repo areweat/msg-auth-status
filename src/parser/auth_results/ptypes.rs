@@ -8,7 +8,7 @@ mod iprev;
 mod spf;
 
 pub use auth::{AuthProperty, AuthPtype};
-pub use dkim::{DkimProperty, DkimPtype};
+pub use dkim::{DkimProperty, DkimPropertyKey};
 pub use dmarc::{DmarcProperty, DmarcPtype};
 pub use iprev::{IpRevProperty, IpRevPtype};
 pub use spf::{SpfProperty, SpfPtype};
@@ -47,6 +47,29 @@ use super::{parse_comment, CommentToken};
 use super::{parse_reason, ReasonToken};
 use super::{ParseCurrentResultChoice, ParseCurrentResultCode};
 use logos::{Lexer, Logos};
+
+use dkim::{parse_dkim_property_key, DkimPropertyToken};
+
+#[derive(Debug, Default)]
+pub enum PtypeChoice {
+    #[default]
+    Nothing,
+    Header,
+    Smtp,
+    Policy,
+}
+
+impl TryFrom<PtypeToken<'_>> for PtypeChoice {
+    type Error = ResultCodeError;
+    fn try_from(token: PtypeToken<'_>) -> Result<Self, Self::Error> {
+        match token {
+            PtypeToken::PtypeHeader => Ok(Self::Header),
+            PtypeToken::PtypeSmtp => Ok(Self::Smtp),
+            PtypeToken::PtypePolicy => Ok(Self::Policy),
+            _ => Err(ResultCodeError::ParsePtypeBugGating),
+        }
+    }
+}
 
 #[derive(Debug, Logos)]
 pub enum PtypeToken<'hdr> {
@@ -95,21 +118,35 @@ pub enum PtypeToken<'hdr> {
     #[token("helo", priority = 4)]
     Helo,
 
-    #[regex(r"\s+", |lex| lex.slice(), priority = 5)]
+    #[token("reason", priority = 5)]
+    Reason,
+    
+    #[regex(r"\s+", |lex| lex.slice(), priority = 6)]
     WhiteSpaces(&'hdr str),
 }
 
-#[derive(Debug)]
+
+#[derive(Debug, PartialEq)]
 enum PtypeStage {
     WantPtype,
     GotPtype,
     WantDot,
     WantPropertyKey,
     GotPropertyKey,
+    WantReasonEq,
     WantEq,
     GotEq,
     WantPropertyVal,
     GotPropertyVal,
+}
+
+impl PtypeStage {
+    fn should_ignore_whitespace(&self) -> bool{
+        match self {
+            // TODO value parsing
+            _ => true,
+        }
+    }
 }
 
 pub fn parse_ptype_properties<'hdr>(
@@ -118,10 +155,10 @@ pub fn parse_ptype_properties<'hdr>(
 ) -> Result<u32, ResultCodeError> {
     let mut properties_count = 0;
     let mut stage = PtypeStage::WantPtype;
-
+    let mut cur_ptype: PtypeChoice = PtypeChoice::Nothing;
+    
     while let Some(token) = lexer.next() {
         match token {
-            //Ok(PtypeSmtp ZZZ
             Ok(PtypeToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
@@ -129,17 +166,57 @@ pub fn parse_ptype_properties<'hdr>(
                     Err(e) => return Err(e),
                 }
                 *lexer = PtypeToken::lexer(comment_lexer.remainder());
+            },
+            Ok(PtypeToken::PtypeSmtp | PtypeToken::PtypeHeader | PtypeToken::PtypePolicy) if stage == PtypeStage::WantPtype => {
+                let cur_ptype_try: Result<PtypeChoice, ResultCodeError> = token
+                    .expect("Was already unwrapped Ok - this would be bad Bug.")
+                    .try_into();
+                
+                match cur_ptype_try {
+                    Err(_) => return Err(ResultCodeError::ParsePtypeBugInvalidProperty),
+                    Ok(choice) => {
+                        cur_ptype = choice;
+                    },
+                }
+                stage = PtypeStage::WantDot;
+            },
+            Ok(PtypeToken::Dot) if stage == PtypeStage::WantDot => {
+                stage = PtypeStage::WantPropertyKey;
             }
+            
             Ok(PtypeToken::FieldSep) => {
                 break;
-            }
-            Ok(PtypeToken::Equal) => {}
+            },
+            Ok(PtypeToken::WhiteSpaces(ref wsh)) if stage.should_ignore_whitespace() => {
+                // cont
+            },
+            Ok(PtypeToken::Reason) if stage == PtypeStage::WantPtype => {
+                stage = PtypeStage::WantReasonEq;
+            },
+            Ok(PtypeToken::Equal) if stage == PtypeStage::WantReasonEq => {
+                let mut reason_lexer = ReasonToken::lexer(lexer.remainder());                
+                let reason_res = match parse_reason(&mut reason_lexer) {
+			        Err(e) => return Err(e),
+                    Ok(reason) => reason,
+                };
+                *lexer = PtypeToken::lexer(reason_lexer.remainder());                
+                stage = PtypeStage::WantPtype;                
+            },
+            Ok(PtypeToken::Equal) if stage == PtypeStage::WantEq => {
+                stage = PtypeStage::WantPropertyVal;
+            },
             _ => {
+                let cut_slice = &lexer.source()[lexer.span().start..];
+                let cut_span = &lexer.source()[lexer.span().start .. lexer.span().end];                
                 panic!(
-                    "parse_ptypes_properties -- Invalid token {:?} - span = {:?} - source = {:?}",
+                    "parse_ptypes_properties({:?}) -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
+                    stage,
                     token,
                     lexer.span(),
-                    lexer.source()
+                    lexer.source(),
+                    cut_span,
+                    cut_slice,
+                    
                 );
             }
         }

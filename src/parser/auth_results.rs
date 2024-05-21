@@ -33,6 +33,9 @@ use mail_parser::HeaderValue;
 pub enum ResultCodeError {
     Parse,
     ParseHost(String),
+    ParsePtypeBugGating,
+    ParsePtypeBugInvalidProperty,
+    ParsePtypeBugPropertyGating,
     InvalidDkimResult(String),
     InvalidSpfResult(String),
     InvalidIpRevResult(String),
@@ -46,6 +49,7 @@ pub enum ResultCodeError {
     NoAssociatedReason,
     NoHostname,
     RunAwayComment,
+    RunAwayDkimPropertyKey,    
     UnexpectedForwardSlash,
 }
 
@@ -135,7 +139,6 @@ pub enum AuthResultToken<'hdr> {
     #[token("=", priority = 1)]
     Equal,
 
-    // TODO: separate below
     #[token("none", priority = 1)]
     NoneNone,
     #[token("softfail", priority = 1)]
@@ -157,33 +160,9 @@ pub enum AuthResultToken<'hdr> {
     #[token("policy", priority = 3)]
     Policy,
 
-    /*
-    #[token("smtp.auth", priority = 2)]
-    SmtpDotAuth,
-    #[token("smtp.helo", priority = 2)]
-    SmtpDotHelo,
-    #[token("smtp.mailfrom", priority = 2)]
-    SmtpDotMailFrom,
-    #[token("header.a", priority = 2)]
-    HeaderDotA,
-    #[token("header.d", priority = 2)]
-    HeaderDotD,
-    #[token("header.i", priority = 2)]
-    HeaderDotI,
-
-    #[token("\\", priority = 3)]
-    BackQuote,
-
-    #[token("\"", priority = 3)]
-    DoubleQuote,
-     */
     #[token(";", priority = 5)]
     FieldSeparator,
 
-    /*
-    #[token(".", priority = 5)]
-    Dot,
-    */
     #[token("(", priority = 6)]
     CommentStart,
 
@@ -451,6 +430,10 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     };
 
                     let mut ptype_lexer = PtypeToken::lexer(lexer.remainder());
+
+                    parse_ptype_properties(&mut ptype_lexer, &mut cur_res);
+
+                    lexer.bump(ptype_lexer.span().end);
                 }
                 Ok(AuthResultToken::ForwardSlash) => {
                     let mut version_lexer = VersionToken::lexer(lexer.remainder());
@@ -492,11 +475,13 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                 }
                 Err(_) => {
                     let cut_slice = &lexer.source()[lexer.span().start..];
+                    let cut_span = &lexer.source()[lexer.span().start .. lexer.span().end];
                     panic!(
-                        "Unrecognised at stage({:?}) span {:?} source {:?} - Clip: {:?}",
+                        "Unrecognised at stage({:?}) span {:?} source {:?}\nClip/Span: {:?} - Clip/Remaining: {:?}",
                         stage,
                         lexer.span(),
                         lexer.source(),
+                        cut_span,
                         cut_slice,
                     );
                 }
