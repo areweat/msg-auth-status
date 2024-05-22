@@ -26,7 +26,7 @@ use version::{parse_version, VersionToken};
 
 use ptypes::PropTypeKey;
 
-#[cfg(feature = "mail_parse")]
+#[cfg(feature = "mail_parser")]
 use mail_parser::HeaderValue;
 
 #[derive(Debug)]
@@ -43,7 +43,7 @@ pub enum ResultCodeError {
     /// Was not a valid ptype/property per IANA and strict validation was used
     InvalidProperty,
     InvalidSmtpAuthResult(String),
-    InvalidResultStage(Stage),
+    InvalidResultStage,
     InvalidVersion,
     NoAssociatedVersion,
     NoAssociatedPolicy,
@@ -202,24 +202,9 @@ enum Stage {
     WantIpRevEqual,
     WantIpRevResult,
     GotIpRevResult,
-
-    // ptype property values
-    // waiting_on_propval must be Some(xProp)
-    /*
-    WantAuthPropEq,
-    WantAUthPropVal,
-    WantSpfPropEq,
-    WantSpfPropVal,
-    WantIpRevPropEq,
-    WantIpRevPropVal,
-    WantDkimPropEq,
-    WantDkimPropVal,
-    WantPolicyPropEq,
-    WantPolicyPropVal,
-     */
     // result = ".."
-    WantReasonEqual,
-    GotReason,
+    //WantReasonEqual,
+    //GotReason,
 }
 
 // State machine helpers
@@ -275,11 +260,10 @@ impl Stage {
         };
         *self = new_stage;
         true
-        //Some(new_stage)
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum ParseCurrentResultChoice<'hdr> {
     SmtpAuth(SmtpAuthResult<'hdr>),
     Spf(SpfResult<'hdr>),
@@ -287,14 +271,20 @@ enum ParseCurrentResultChoice<'hdr> {
     IpRev(IpRevResult<'hdr>),
 }
 
-#[derive(Debug, Default)]
+impl<'hdr> ParseCurrentResultChoice<'hdr> {
+    fn set_reason(&mut self, reason: &'hdr str) {
+        match self {
+            ParseCurrentResultChoice::Dkim(ref mut dkim_res) => {
+                dkim_res.reason = Some(reason);
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
 struct ParseCurrentResultCode<'hdr> {
     result: Option<ParseCurrentResultChoice<'hdr>>,
-    //current_property: Option<PropTypeKey>,
-    #[cfg(any(feature = "alloc", feature = "heapless"))]
-    properties: Vec<Prop<'hdr>>,
-    #[cfg(any(feature = "alloc", feature = "heapless"))]
-    comments: Vec<&'hdr str>,
 }
 
 fn assign_result_code<'hdr>(
@@ -341,7 +331,7 @@ fn assign_result_code<'hdr>(
             AuthResultToken::Policy => panic!("Bingo.."),
             _ => panic!("Nope. Token really was ... {:?}", token),
         },
-        _ => Err(ResultCodeError::InvalidResultStage(stage.clone())),
+        _ => Err(ResultCodeError::InvalidResultStage),
     }
     //panic!("assign_result_code Token: {:?} - stage: {:?} - cur_res = {:?}", token, stage, cur_res);
 }
@@ -396,6 +386,7 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                 Ok(AuthResultToken::Equal) if stage.is_cur_expect_resultset_equal() => {
                     stage.equal_to_result();
                 }
+                /*
                 Ok(AuthResultToken::Equal) if stage == Stage::WantReasonEqual => {
                     let mut reason_lexer: Lexer<'hdr, ReasonToken<'hdr>> = lexer.morph();
                     let reason_res = match parse_reason(&mut reason_lexer) {
@@ -407,7 +398,7 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                 }
                 Ok(AuthResultToken::Reason) => {
                     stage = Stage::WantReasonEqual;
-                }
+                } */
                 Ok(AuthResultToken::Policy) => {
                     let mut policy_lexer: Lexer<'hdr, PolicyToken<'hdr>> = lexer.morph();
                     let policy = match parse_policy(&mut policy_lexer) {
@@ -435,17 +426,22 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
 
                     let mut ptype_lexer = PtypeToken::lexer(lexer.remainder());
 
-                    let props_res = match parse_ptype_properties(&mut ptype_lexer, &cur_res) {
-                        Err(e) => return Err(e),
-                        Ok(properties) => properties,
-                    };
-
-                    panic!(
-                        "YAY Properties!\n - cur_res = {:?}\n - Properties = {:?}",
-                        &cur_res, &props_res
-                    );
+                    let props_res =
+                        match parse_ptype_properties(&mut ptype_lexer, &mut cur_res.result) {
+                            Err(e) => return Err(e),
+                            Ok(properties) => properties,
+                        };
 
                     lexer.bump(ptype_lexer.span().end);
+
+                    stage = Stage::WantIdentifier;
+                    match cur_res.result {
+                        Some(ParseCurrentResultChoice::Dkim(dkim_res)) => {
+                            res.dkim_result.push(dkim_res)
+                        }
+                        _ => {}
+                    }
+                    cur_res = ParseCurrentResultCode::default();
                 }
                 Ok(AuthResultToken::ForwardSlash) => {
                     let mut version_lexer = VersionToken::lexer(lexer.remainder());

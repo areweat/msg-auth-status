@@ -5,7 +5,7 @@ use crate::dkim::{DkimProperty, DkimResult};
 use crate::iprev::{IpRevProperty, IpRevResult};
 use crate::spf::{SpfProperty, SpfResult};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct AuthenticationResults<'hdr> {
     pub a: Option<&'hdr str>,
     pub host: Option<&'hdr str>,
@@ -16,13 +16,13 @@ pub struct AuthenticationResults<'hdr> {
     pub none_done: bool,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct HostVersion<'hdr> {
     pub host: &'hdr str,
     pub version: Option<u32>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Prop<'hdr> {
     Auth(AuthProperty<'hdr>),
     Dkim(DkimProperty<'hdr>),
@@ -32,7 +32,7 @@ pub enum Prop<'hdr> {
     Unknown(UnknownProperty<'hdr>),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct UnknownProperty<'hdr> {
     ptype: &'hdr str,
     pval: &'hdr str,

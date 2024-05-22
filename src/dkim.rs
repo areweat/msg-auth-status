@@ -1,6 +1,6 @@
 //! Public DKIM types exported by this library
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct DkimResult<'hdr> {
     pub code: DkimResultCode,
     pub reason: Option<&'hdr str>,
@@ -11,10 +11,24 @@ pub struct DkimResult<'hdr> {
     pub header_s: Option<&'hdr str>,
 }
 
+impl<'hdr> DkimResult<'hdr> {
+    pub(crate) fn set_header(&mut self, prop: &ptypes::DkimHeader<'hdr>) -> bool {
+        match prop {
+            ptypes::DkimHeader::D(val) => self.header_d = Some(val),
+            ptypes::DkimHeader::I(val) => self.header_i = Some(val),
+            ptypes::DkimHeader::B(val) => self.header_b = Some(val),
+            ptypes::DkimHeader::A(val) => self.header_a = Some(val.clone()),
+            ptypes::DkimHeader::S(val) => self.header_s = Some(val),
+            _ => {}
+        }
+        true
+    }
+}
+
 /// DKIM Result Codes - s.2.7.1
 //#[derive(Debug, Default, EnumString, StrumDisplay)]
 //#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum DkimResultCode {
     #[default]
     Unknown,
@@ -46,7 +60,7 @@ pub enum DkimResultCode {
     PermError,
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum DKimCanonicalization<'hdr> {
     #[default]
     /// simple/simple & simple algorithm tolerates almost no modification
@@ -58,14 +72,14 @@ pub enum DKimCanonicalization<'hdr> {
     Unknown(&'hdr str),
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum DkimTimestamp<'hdr> {
     #[default]
     Unknown,
     Raw(&'hdr str),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum DkimAlgorithm<'hdr> {
     /// Do not use
@@ -76,7 +90,7 @@ pub enum DkimAlgorithm<'hdr> {
     Ed25519_Sha256,
     Unknown(&'hdr str),
 }
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum DkimVersion<'hdr> {
     /// RFC just says this should be used
     One,

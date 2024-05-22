@@ -7,13 +7,13 @@
 
 use super::*;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum AuthProperty<'hdr> {
     SmtpAuth(&'hdr str),
     MailFrom(&'hdr str),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum AuthPtype {
     Smtp,
     SmtpDotAuth,

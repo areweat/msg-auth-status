@@ -1,0 +1,68 @@
+---
+source: src/lib.rs
+assertion_line: 87
+expression: "&status"
+---
+Ok(
+    MessageAuthStatus {
+        results: [
+            AuthenticationResults {
+                a: None,
+                host: None,
+                smtp_auth_result: [],
+                spf_result: [],
+                dkim_result: [
+                    DkimResult {
+                        code: Pass,
+                        reason: Some(
+                            "good signature",
+                        ),
+                        header_d: None,
+                        header_i: Some(
+                            "@mail-router.example.net",
+                        ),
+                        header_b: None,
+                        header_a: None,
+                        header_s: None,
+                    },
+                    DkimResult {
+                        code: Fail,
+                        reason: Some(
+                            "bad signature",
+                        ),
+                        header_d: None,
+                        header_i: Some(
+                            "@newyork.example.com",
+                        ),
+                        header_b: None,
+                        header_a: None,
+                        header_s: None,
+                    },
+                ],
+                iprev_result: [],
+                none_done: false,
+            },
+            AuthenticationResults {
+                a: None,
+                host: None,
+                smtp_auth_result: [],
+                spf_result: [],
+                dkim_result: [
+                    DkimResult {
+                        code: Pass,
+                        reason: None,
+                        header_d: None,
+                        header_i: Some(
+                            "@newyork.example.com",
+                        ),
+                        header_b: None,
+                        header_a: None,
+                        header_s: None,
+                    },
+                ],
+                iprev_result: [],
+                none_done: false,
+            },
+        ],
+    },
+)

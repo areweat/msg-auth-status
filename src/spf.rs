@@ -1,6 +1,6 @@
 //! SPF Types
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SpfResult<'hdr> {
     pub code: SpfResultCode,
     pub reason: Option<&'hdr str>,
@@ -12,7 +12,7 @@ pub struct SpfResult<'hdr> {
 /// SPF defined in RFC 7208 s.2.6 - Results evaluation
 //#[derive(Debug, Default, EnumString, StrumDisplay)]
 //#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum SpfResultCode {
     #[default]
     Unknown,

@@ -2,8 +2,16 @@
     clippy::unwrap_used,
 //    missing_docs,
     rust_2018_idioms,
-    unused_lifetimes,
-    unused_qualifications
+//    unused_lifetimes,
+//    unused_qualifications
+)]
+#![allow(
+    unused_mut,
+    unused_variables,
+    unreachable_code,
+    unused_imports,
+    dead_code,
+    unused_assignments
 )]
 #![doc = include_str!("../README.md")]
 
@@ -18,7 +26,10 @@ pub mod spf;
 mod parser;
 
 #[derive(Debug)]
-pub struct MessageAuthStatus {}
+pub struct MessageAuthStatus<'hdr> {
+    //    parsed: mail_parser::Message<'hdr>,
+    results: Vec<AuthenticationResults<'hdr>>,
+}
 
 #[derive(Debug)]
 pub enum Error {
@@ -27,21 +38,18 @@ pub enum Error {
 
 use std::borrow::Cow;
 
-impl<'hdr> MessageAuthStatus {
-    #[cfg(feature = "mail_parse")]
-    pub fn from_rfc822(msg: &'hdr [u8]) -> Result<Self, Error> {
-        let parsed = match mail_parser::MessageParser::default().parse(&*msg) {
-            Some(p) => p,
-            None => return Err(Error::ParseNone),
-        };
-        let auth_results: Vec<AuthenticationResults<'_>> = parsed
+impl<'hdr> MessageAuthStatus<'hdr> {
+    #[cfg(feature = "mail_parser")]
+    pub fn from_mail_parser(msg: &'hdr mail_parser::Message<'hdr>) -> Result<Self, Error> {
+        let mut new_self = Self { results: vec![] };
+
+        new_self.results = msg
             .header_values("Authentication-Results")
+            .into_iter()
             .map(|mh| mh.try_into().unwrap())
             .collect();
-        panic!("{:?}", auth_results);
-        //panic!("{:?}", parsed.header_values("DKIM-Signature").join(","));
 
-        Ok(Self {})
+        Ok(new_self)
     }
 }
 
@@ -65,9 +73,17 @@ mod test {
     }
 
     #[rstest]
-    #[cfg(feature = "mail_parse")]
-    fn from_rfc822(#[files("test_data/rfc8601_b*.txt")] file_path: PathBuf) {
+    #[cfg(feature = "mail_parser")]
+    fn from_mail_parser(#[files("test_data/rfc8601_b*.txt")] file_path: PathBuf) {
         let data = load_test_data(file_path.to_str().unwrap());
-        assert_debug_snapshot!(MessageAuthStatus::from_rfc822(&*data));
+
+        let parser = mail_parser::MessageParser::default();
+
+        //let parsed: mail_parser::Message<'hdr> = parser.parse(msg).unwrap();
+        let parsed = parser.parse(&data).unwrap();
+
+        //        assert_debug_snapshot!(MessageAuthStatus::from_rfc822(&*data));
+        let status = MessageAuthStatus::from_mail_parser(&parsed);
+        assert_debug_snapshot!(&status);
     }
 }

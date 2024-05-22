@@ -54,12 +54,11 @@ pub enum PtypeChoice {
 }
 
 impl PtypeChoice {
-    // let cur_ptype_try = PtypeChoice::from_associated_method_ptype(cur_res, token).map_err(|_| ResultCodeError::ParsePtypeInvalidPtype)?
     fn from_associated_method_ptype<'hdr>(
-        cur_res: &'hdr ParseCurrentResultCode<'hdr>,
+        cur_res: &'hdr Option<ParseCurrentResultChoice<'hdr>>,
         token: &'hdr PtypeToken<'hdr>,
     ) -> Self {
-        match cur_res.result.as_ref() {
+        match cur_res {
             Some(ParseCurrentResultChoice::Dkim(_)) => match token {
                 PtypeToken::PtypeHeader => Self::DkimHeader,
                 PtypeToken::PtypePolicy => Self::DkimPolicy,
@@ -81,19 +80,6 @@ impl PtypeChoice {
         }
     }
 }
-
-/*
-impl TryFrom<PtypeToken<'_>> for PtypeChoice {
-    type Error = ResultCodeError;
-    fn try_from(token: PtypeToken<'_>) -> Result<Self, Self::Error> {
-        match token {
-            PtypeToken::PtypeHeader => Ok(Self::Header),
-            PtypeToken::PtypeSmtp => Ok(Self::Smtp),
-            PtypeToken::PtypePolicy => Ok(Self::Policy),
-            _ => Err(ResultCodeError::ParsePtypeBugGating),
-        }
-    }
-} */
 
 #[derive(Debug, Logos)]
 pub enum PtypeToken<'hdr> {
@@ -142,7 +128,6 @@ enum PtypeStage {
 impl PtypeStage {
     fn should_ignore_whitespace(&self) -> bool {
         match self {
-            // TODO value parsing
             _ => true,
         }
     }
@@ -150,15 +135,13 @@ impl PtypeStage {
 
 pub fn parse_ptype_properties<'hdr>(
     lexer: &mut Lexer<'hdr, PtypeToken<'hdr>>,
-    cur_res: &'hdr ParseCurrentResultCode<'hdr>,
-) -> Result<ParseCurrentResultCode<'hdr>, ResultCodeError> {
-    //let mut ret_properties = vec[];
-    let mut ret_properties = ParseCurrentResultCode::default();
+    cur_res: &mut Option<ParseCurrentResultChoice<'hdr>>,
+) -> Result<(), ResultCodeError> {
     let mut stage = PtypeStage::WantPtype;
     let mut cur_ptype: PtypeChoice = PtypeChoice::Nothing;
     let mut cur_property: PropTypeKey = PropTypeKey::Nothing;
 
-    let mut cur_res_choice = match &cur_res.result {
+    let mut cur_res_choice = match &cur_res {
         Some(choice) => choice,
         None => return Err(ResultCodeError::ParsePtypeNoMethodResult),
     };
@@ -171,7 +154,7 @@ pub fn parse_ptype_properties<'hdr>(
                     Ok(comment) => {}
                     Err(e) => return Err(e),
                 }
-                *lexer = PtypeToken::lexer(comment_lexer.remainder());
+                lexer.bump(comment_lexer.span().end);
             }
             Ok(PtypeToken::PtypeSmtp | PtypeToken::PtypeHeader | PtypeToken::PtypePolicy)
                 if stage == PtypeStage::WantPtype =>
@@ -202,7 +185,7 @@ pub fn parse_ptype_properties<'hdr>(
                                 Err(e) => return Err(e),
                                 Ok(property_key) => property_key,
                             };
-                        *lexer = PtypeToken::lexer(property_key_lexer.remainder());
+                        lexer.bump(property_key_lexer.span().end);
                         PropTypeKey::DkimHeader(property_key)
                     }
                     _ => return Err(ResultCodeError::PropertiesNotImplemented),
@@ -225,31 +208,43 @@ pub fn parse_ptype_properties<'hdr>(
                     Err(e) => return Err(e),
                     Ok(reason) => reason,
                 };
-                *lexer = PtypeToken::lexer(reason_lexer.remainder());
+                match cur_res {
+                    Some(ref mut ref_choice) => {
+                        ref_choice.set_reason(reason_res);
+                    }
+                    _ => {}
+                }
+                lexer.bump(reason_lexer.span().end);
                 stage = PtypeStage::WantPtype;
             }
             Ok(PtypeToken::Equal)
                 if stage == PtypeStage::WantEq && cur_property != PropTypeKey::Nothing =>
             {
-                let property_value = match cur_property {
-                    PropTypeKey::DkimHeader(property) => {
+                match cur_property {
+                    PropTypeKey::DkimHeader(ref property) => {
                         let mut property_value_lexer =
                             DkimHeaderPropertyValueToken::lexer(lexer.remainder());
                         let property_value = match parse_dkim_header_property_value(
                             &mut property_value_lexer,
                             &property,
+                            //&mut cur_res,
                         ) {
                             Err(e) => return Err(e),
                             Ok(property_value) => property_value,
                         };
-                        *lexer = PtypeToken::lexer(property_value_lexer.remainder());
-                        property_value
+                        lexer.bump(property_value_lexer.span().end);
+
+                        match cur_res {
+                            Some(ParseCurrentResultChoice::Dkim(ref mut dkim_res)) => {
+                                dkim_res.set_header(&property_value);
+                            }
+                            _ => {}
+                        }
                     }
                     _ => {
                         return Err(ResultCodeError::PropertyValuesNotImplemented);
                     }
                 };
-                panic!("Got property value back: {:?}", property_value);
             }
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
@@ -266,7 +261,7 @@ pub fn parse_ptype_properties<'hdr>(
             }
         }
     }
-    Ok(ret_properties)
+    Ok(())
 }
 
 #[cfg(test)]
@@ -291,9 +286,9 @@ mod test {
         let mut cur_spf = prep_spf(prop_str);
         let mut lexer = PtypeToken::lexer(prop_str);
 
-        let res = parse_ptype_properties(&mut lexer, &cur_spf).unwrap();
+        let res = parse_ptype_properties(&mut lexer, &mut cur_spf.result).unwrap();
 
         assert_debug_snapshot!(cur_spf);
-        assert_eq!(expected_count, res.properties.len());
+        //assert_eq!(expected_count, res.properties.len());
     }
 }

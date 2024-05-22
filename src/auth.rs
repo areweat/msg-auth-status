@@ -1,4 +1,4 @@
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SmtpAuthResult<'hdr> {
     pub code: SmtpAuthResultCode,
     pub smtp_auth: Option<&'hdr str>,
@@ -9,7 +9,7 @@ pub struct SmtpAuthResult<'hdr> {
 /// This SMTP Authentication (not DKIM)
 //#[derive(Debug, Default, EnumString, StrumDisplay)]
 //#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum SmtpAuthResultCode {
     #[default]
     Unknown,

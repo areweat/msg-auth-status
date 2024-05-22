@@ -9,12 +9,13 @@
 
 use super::*;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum DkimProperty<'hdr> {
     Header(DkimHeader<'hdr>),
 }
 
 /// The 'q' Tag - see RFC 6376 s. 3.5
+#[derive(Clone, Debug, PartialEq)]
 pub enum DkimQueryMethod<'hdr> {
     /// Domain Name System (DNS)
     Dns,
@@ -23,7 +24,7 @@ pub enum DkimQueryMethod<'hdr> {
 }
 
 /// See RFC 6376 s. 3.5
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum DkimHeader<'hdr> {
     /// Required - Version
     V(DkimVersion<'hdr>),

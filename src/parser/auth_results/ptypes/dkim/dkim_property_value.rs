@@ -15,8 +15,8 @@ pub enum DkimHeaderPropertyValueToken<'hdr> {
     #[token("(", priority = 1)]
     CommentStart,
 
-    #[token(";", priority = 1)]
-    FieldSep,
+    //    #[token(";", priority = 1)]
+    //    FieldSep,
 
     //#[regex(r#"([^"\\]|\\t|\\u|\\n|\\")*"#, |lex| lex.slice(), priority = 1)]
     #[regex(r#"[^\s;]+"#, |lex| lex.slice(), priority = 2)]
@@ -58,8 +58,6 @@ pub fn parse_dkim_header_property_value<'hdr>(
             Ok(DkimHeaderPropertyValueToken::MaybeValue(val)) if value_captured == false => {
                 cur_res = Some(DkimHeader::from_parsed(property_key, val));
                 value_captured = true;
-            }
-            Ok(DkimHeaderPropertyValueToken::FieldSep) => {
                 break;
             }
             _ => {

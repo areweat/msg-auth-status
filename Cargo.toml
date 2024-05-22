@@ -17,4 +17,4 @@ rstest = { version = "0.19" }
 default = ["alloc", "std"]
 std = []
 alloc = []
-mail_parse = ["mail-parser"]
+mail_parser = ["dep:mail-parser"]

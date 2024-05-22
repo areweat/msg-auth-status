@@ -7,18 +7,18 @@
 
 use super::*;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SpfProperty<'hdr> {
     Smtp(SpfSmtp<'hdr>),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SpfSmtp<'hdr> {
     MailFrom(&'hdr str),
     Helo(&'hdr str),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SpfPtype {
     Smtp,
     SmtpMailFrom,

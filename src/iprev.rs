@@ -1,4 +1,4 @@
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct IpRevResult<'hdr> {
     pub code: IpRevResultCode,
     pub reason: Option<&'hdr str>,
@@ -8,7 +8,7 @@ pub struct IpRevResult<'hdr> {
 /// IpRev Result Codes - s.2.7.3
 //#[derive(Debug, Default, EnumString, StrumDisplay)]
 //#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum IpRevResultCode {
     #[default]
     Unknown,

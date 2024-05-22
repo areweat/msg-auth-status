@@ -1,8 +1,10 @@
 ---
 source: src/lib.rs
-assertion_line: 57
-expression: "MessageAuthStatus::from_rfc822(&*data)"
+assertion_line: 97
+expression: "&status"
 ---
 Ok(
-    MessageAuthStatus,
+    MessageAuthStatus {
+        results: [],
+    },
 )

@@ -7,7 +7,7 @@
 
 use super::*;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum IpRevProperty<'hdr> {
     PolicyIpRev(&'hdr str),
 }
