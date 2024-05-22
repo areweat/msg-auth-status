@@ -2,16 +2,8 @@
     clippy::unwrap_used,
 //    missing_docs,
     rust_2018_idioms,
-//    unused_lifetimes,
-//    unused_qualifications
-)]
-#![allow(
-    unused_mut,
-    unused_variables,
-    unreachable_code,
-    unused_imports,
-    dead_code,
-    unused_assignments
+    unused_lifetimes,
+    unused_qualifications
 )]
 #![doc = include_str!("../README.md")]
 
@@ -27,7 +19,6 @@ mod parser;
 
 #[derive(Debug)]
 pub struct MessageAuthStatus<'hdr> {
-    //    parsed: mail_parser::Message<'hdr>,
     results: Vec<AuthenticationResults<'hdr>>,
 }
 
@@ -35,8 +26,6 @@ pub struct MessageAuthStatus<'hdr> {
 pub enum Error {
     ParseNone,
 }
-
-use std::borrow::Cow;
 
 impl<'hdr> MessageAuthStatus<'hdr> {
     #[cfg(feature = "mail_parser")]
@@ -79,10 +68,8 @@ mod test {
 
         let parser = mail_parser::MessageParser::default();
 
-        //let parsed: mail_parser::Message<'hdr> = parser.parse(msg).unwrap();
         let parsed = parser.parse(&data).unwrap();
 
-        //        assert_debug_snapshot!(MessageAuthStatus::from_rfc822(&*data));
         let status = MessageAuthStatus::from_mail_parser(&parsed);
         assert_debug_snapshot!(&status);
     }

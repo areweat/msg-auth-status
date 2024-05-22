@@ -1,6 +1,6 @@
 ---
 source: src/lib.rs
-assertion_line: 87
+assertion_line: 74
 expression: "&status"
 ---
 Ok(

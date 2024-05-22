@@ -1,20 +1,10 @@
 ---
 source: src/lib.rs
-assertion_line: 87
+assertion_line: 74
 expression: "&status"
 ---
 Ok(
     MessageAuthStatus {
-        results: [
-            AuthenticationResults {
-                a: None,
-                host: None,
-                smtp_auth_result: [],
-                spf_result: [],
-                dkim_result: [],
-                iprev_result: [],
-                none_done: true,
-            },
-        ],
+        results: [],
     },
 )
