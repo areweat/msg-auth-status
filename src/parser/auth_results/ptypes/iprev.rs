@@ -1,17 +1,4 @@
-//! iprev ptype and it's properties
-//!
-//! See IANA Assignments
+//! Parsing dkim property types & values
 //! https://www.iana.org/assignments/email-auth/email-auth.xhtml
-//!
-//! And iprev in RFC 8601 s. 2.7
 
-#[derive(Debug)]
-pub enum IpRevProperty<'hdr> {
-    PolicyIpRev(&'hdr str),
-}
-
-#[derive(Debug)]
-pub enum IpRevPtype {
-    Policy,
-    PolicyDotIpRev,
-}
+use crate::iprev::*;

@@ -26,3 +26,6 @@ pub enum SmtpAuthResultCode {
     /// the attempt due to some error that is likely not transient in nature
     PermError,
 }
+
+mod ptypes;
+pub use ptypes::AuthProperty;

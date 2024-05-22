@@ -8,24 +8,12 @@
 #![doc = include_str!("../README.md")]
 
 mod types;
+pub use types::{AuthenticationResults, HostVersion, Prop};
 
-pub use types::{AuthenticationResults, HostVersion};
-
-pub mod auth {
-    pub use crate::types::auth::*;
-}
-
-pub mod dkim {
-    pub use crate::types::dkim::*;
-}
-
-pub mod iprev {
-    pub use crate::types::iprev::*;
-}
-
-pub mod spf {
-    pub use crate::types::spf::*;
-}
+pub mod auth;
+pub mod dkim;
+pub mod iprev;
+pub mod spf;
 
 mod parser;
 

@@ -8,7 +8,7 @@ use crate::auth::{SmtpAuthResult, SmtpAuthResultCode};
 use crate::dkim::{DkimResult, DkimResultCode};
 use crate::iprev::{IpRevResult, IpRevResultCode};
 use crate::spf::{SpfResult, SpfResultCode};
-use crate::AuthenticationResults;
+use crate::{AuthenticationResults, Prop};
 
 mod comment;
 mod host_version;
@@ -24,7 +24,7 @@ use ptypes::{parse_ptype_properties, PtypeToken};
 use reason::{parse_reason, ReasonToken};
 use version::{parse_version, VersionToken};
 
-use ptypes::{PropType, PropTypeKey};
+use ptypes::PropTypeKey;
 
 #[cfg(feature = "mail_parse")]
 use mail_parser::HeaderValue;
@@ -36,6 +36,7 @@ pub enum ResultCodeError {
     ParsePtypeBugGating,
     ParsePtypeBugInvalidProperty,
     ParsePtypeBugPropertyGating,
+    ParsePtypeInvalidPtype,
     InvalidDkimResult(String),
     InvalidSpfResult(String),
     InvalidIpRevResult(String),
@@ -48,8 +49,11 @@ pub enum ResultCodeError {
     NoAssociatedPolicy,
     NoAssociatedReason,
     NoHostname,
+    ParsePtypeNoMethodResult,
+    PropertiesNotImplemented,
+    PropertyValuesNotImplemented,
     RunAwayComment,
-    RunAwayDkimPropertyKey,    
+    RunAwayDkimPropertyKey,
     UnexpectedForwardSlash,
 }
 
@@ -288,7 +292,7 @@ struct ParseCurrentResultCode<'hdr> {
     result: Option<ParseCurrentResultChoice<'hdr>>,
     //current_property: Option<PropTypeKey>,
     #[cfg(any(feature = "alloc", feature = "heapless"))]
-    properties: Vec<PropType<'hdr>>,
+    properties: Vec<Prop<'hdr>>,
     #[cfg(any(feature = "alloc", feature = "heapless"))]
     comments: Vec<&'hdr str>,
 }
@@ -431,7 +435,15 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
 
                     let mut ptype_lexer = PtypeToken::lexer(lexer.remainder());
 
-                    parse_ptype_properties(&mut ptype_lexer, &mut cur_res);
+                    let props_res = match parse_ptype_properties(&mut ptype_lexer, &cur_res) {
+                        Err(e) => return Err(e),
+                        Ok(properties) => properties,
+                    };
+
+                    panic!(
+                        "YAY Properties!\n - cur_res = {:?}\n - Properties = {:?}",
+                        &cur_res, &props_res
+                    );
 
                     lexer.bump(ptype_lexer.span().end);
                 }
@@ -475,14 +487,15 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                 }
                 Err(_) => {
                     let cut_slice = &lexer.source()[lexer.span().start..];
-                    let cut_span = &lexer.source()[lexer.span().start .. lexer.span().end];
+                    let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
                     panic!(
-                        "Unrecognised at stage({:?}) span {:?} source {:?}\nClip/Span: {:?} - Clip/Remaining: {:?}",
+                        "Unrecognised at stage({:?}) span {:?} source {:?}\nClip/Span: {:?} - Clip/Remaining: {:?}\n Case: {:?}",
                         stage,
                         lexer.span(),
                         lexer.source(),
                         cut_span,
                         cut_slice,
+                        text,
                     );
                 }
             }

@@ -1,4 +1,4 @@
-//! Public types exported by this library
+//! Public DKIM types exported by this library
 
 #[derive(Debug, Default)]
 pub struct DkimResult<'hdr> {
@@ -83,3 +83,6 @@ pub enum DkimVersion<'hdr> {
     /// Something else outside RFC
     Unknown(&'hdr str),
 }
+
+pub mod ptypes;
+pub use ptypes::DkimProperty;

@@ -1,15 +1,9 @@
-//! All public types
 //! Re-export in under root
 
-pub mod auth;
-pub mod dkim;
-pub mod iprev;
-pub mod spf;
-
-use crate::auth::SmtpAuthResult;
-use crate::dkim::DkimResult;
-use crate::iprev::IpRevResult;
-use crate::spf::SpfResult;
+use crate::auth::{AuthProperty, SmtpAuthResult};
+use crate::dkim::{DkimProperty, DkimResult};
+use crate::iprev::{IpRevProperty, IpRevResult};
+use crate::spf::{SpfProperty, SpfResult};
 
 #[derive(Debug, Default)]
 pub struct AuthenticationResults<'hdr> {
@@ -26,4 +20,20 @@ pub struct AuthenticationResults<'hdr> {
 pub struct HostVersion<'hdr> {
     pub host: &'hdr str,
     pub version: Option<u32>,
+}
+
+#[derive(Debug)]
+pub enum Prop<'hdr> {
+    Auth(AuthProperty<'hdr>),
+    Dkim(DkimProperty<'hdr>),
+    //Dmarc(DmarcProperty<'hdr>),
+    IpRev(IpRevProperty<'hdr>),
+    Spf(SpfProperty<'hdr>),
+    Unknown(UnknownProperty<'hdr>),
+}
+
+#[derive(Debug)]
+pub struct UnknownProperty<'hdr> {
+    ptype: &'hdr str,
+    pval: &'hdr str,
 }

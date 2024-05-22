@@ -48,3 +48,6 @@ pub enum SpfResultCode {
     /// intervention to be resolved.
     PermError,
 }
+
+pub mod ptypes;
+pub use ptypes::SpfProperty;

@@ -36,3 +36,6 @@ pub enum IpRevResultCode {
     /// produce a final result.
     PermError,
 }
+
+pub mod ptypes;
+pub use ptypes::IpRevProperty;
