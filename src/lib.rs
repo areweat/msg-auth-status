@@ -64,13 +64,20 @@ mod test {
     #[rstest]
     #[cfg(feature = "mail_parser")]
     fn from_mail_parser(#[files("test_data/rfc8601_b*.txt")] file_path: PathBuf) {
-        let data = load_test_data(file_path.to_str().unwrap());
+        // set_snapshot_path
 
-        let parser = mail_parser::MessageParser::default();
+        let new_snapshot_path = file_path.with_extension("snap");
+        //panic!("snapshot_path = {:?}", new_snapshot_path);
 
-        let parsed = parser.parse(&data).unwrap();
+        insta::with_settings!({snapshot_path => new_snapshot_path}, {
+            let data = load_test_data(file_path.to_str().unwrap());
 
-        let status = MessageAuthStatus::from_mail_parser(&parsed);
-        assert_debug_snapshot!(&status);
+            let parser = mail_parser::MessageParser::default();
+
+            let parsed = parser.parse(&data).unwrap();
+
+            let status = MessageAuthStatus::from_mail_parser(&parsed);
+            assert_debug_snapshot!(&status);
+        });
     }
 }

@@ -7,13 +7,13 @@ use crate::spf::{SpfProperty, SpfResult};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AuthenticationResults<'hdr> {
-    pub a: Option<&'hdr str>,
-    pub host: Option<&'hdr str>,
+    pub host: Option<HostVersion<'hdr>>,
     pub smtp_auth_result: Vec<SmtpAuthResult<'hdr>>,
     pub spf_result: Vec<SpfResult<'hdr>>,
     pub dkim_result: Vec<DkimResult<'hdr>>,
     pub iprev_result: Vec<IpRevResult<'hdr>>,
     pub none_done: bool,
+    pub raw: Option<&'hdr str>,
 }
 
 #[derive(Clone, Debug, PartialEq)]

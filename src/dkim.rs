@@ -9,6 +9,7 @@ pub struct DkimResult<'hdr> {
     pub header_b: Option<&'hdr str>,
     pub header_a: Option<DkimAlgorithm<'hdr>>,
     pub header_s: Option<&'hdr str>,
+    pub raw: Option<&'hdr str>,
 }
 
 impl<'hdr> DkimResult<'hdr> {

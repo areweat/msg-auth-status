@@ -1,8 +1,6 @@
 //! Parsing for Auth Results using Logos
 
-//use core::str::FromStr;
 use logos::{Lexer, Logos};
-//use strum_macros::{Display as StrumDisplay, EnumString};
 
 use crate::auth::{SmtpAuthResult, SmtpAuthResultCode};
 use crate::dkim::{DkimResult, DkimResultCode};
@@ -164,9 +162,6 @@ pub enum AuthResultToken<'hdr> {
     #[token("policy", priority = 3)]
     Policy,
 
-    #[token(";", priority = 5)]
-    FieldSeparator,
-
     #[token("(", priority = 6)]
     CommentStart,
 
@@ -202,9 +197,6 @@ enum Stage {
     WantIpRevEqual,
     WantIpRevResult,
     GotIpRevResult,
-    // result = ".."
-    //WantReasonEqual,
-    //GotReason,
 }
 
 // State machine helpers
@@ -285,6 +277,7 @@ impl<'hdr> ParseCurrentResultChoice<'hdr> {
 #[derive(Clone, Debug, Default)]
 struct ParseCurrentResultCode<'hdr> {
     result: Option<ParseCurrentResultChoice<'hdr>>,
+    raw: Option<&'hdr str>,
 }
 
 fn assign_result_code<'hdr>(
@@ -293,6 +286,7 @@ fn assign_result_code<'hdr>(
     cur_res: &mut ParseCurrentResultCode<'hdr>,
 ) -> Result<Stage, ResultCodeError> {
     let mut new_res: ParseCurrentResultCode<'hdr> = ParseCurrentResultCode::default();
+
     match stage {
         Stage::WantAuthResult => {
             let result_code = SmtpAuthResultCode::try_from(token).map_err(|e| e)?;
@@ -333,7 +327,6 @@ fn assign_result_code<'hdr>(
         },
         _ => Err(ResultCodeError::InvalidResultStage),
     }
-    //panic!("assign_result_code Token: {:?} - stage: {:?} - cur_res = {:?}", token, stage, cur_res);
 }
 
 impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
@@ -353,52 +346,40 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
 
         let mut lexer: Lexer<'hdr, AuthResultToken<'hdr>> = host_lexer.morph();
         let mut res = Self::default();
+
+        res.raw = Some(text);
+        res.host = Some(host);
+
         let mut stage = Stage::WantIdentifier;
         let mut cur_res = ParseCurrentResultCode::default();
+        cur_res.raw = Some(text);
+
+        let mut raw_part_start = 0;
 
         while let Some(token) = lexer.next() {
             match token {
-                Ok(AuthResultToken::FieldSeparator) if stage.got_result() => {
-                    stage = Stage::WantIdentifier;
-                    panic!(
-                                "OK TODO fieldSeparator Current_res at field sep = {:?} .. save it - span - {:?}, text - {:?}",
-                                cur_res,
-                                lexer.span(),
-                                text
-                            );
-                    cur_res = ParseCurrentResultCode::default();
-                }
                 Ok(AuthResultToken::NoneNone) if stage == Stage::WantIdentifier => {
                     res.none_done = true;
                 }
                 Ok(AuthResultToken::Auth) if stage == Stage::WantIdentifier => {
                     stage = Stage::WantAuthEqual;
+                    raw_part_start = lexer.span().start;
                 }
                 Ok(AuthResultToken::Spf) if stage == Stage::WantIdentifier => {
                     stage = Stage::WantSpfEqual;
+                    raw_part_start = lexer.span().start;
                 }
                 Ok(AuthResultToken::Dkim) if stage == Stage::WantIdentifier => {
                     stage = Stage::WantDkimEqual;
+                    raw_part_start = lexer.span().start;
                 }
                 Ok(AuthResultToken::IpRev) if stage == Stage::WantIdentifier => {
                     stage = Stage::WantIpRevEqual;
+                    raw_part_start = lexer.span().start;
                 }
                 Ok(AuthResultToken::Equal) if stage.is_cur_expect_resultset_equal() => {
                     stage.equal_to_result();
                 }
-                /*
-                Ok(AuthResultToken::Equal) if stage == Stage::WantReasonEqual => {
-                    let mut reason_lexer: Lexer<'hdr, ReasonToken<'hdr>> = lexer.morph();
-                    let reason_res = match parse_reason(&mut reason_lexer) {
-                        Err(e) => return Err(e),
-                        Ok(reason) => reason,
-                    };
-                    lexer = reason_lexer.morph();
-                    stage = Stage::GotReason;
-                }
-                Ok(AuthResultToken::Reason) => {
-                    stage = Stage::WantReasonEqual;
-                } */
                 Ok(AuthResultToken::Policy) => {
                     let mut policy_lexer: Lexer<'hdr, PolicyToken<'hdr>> = lexer.morph();
                     let policy = match parse_policy(&mut policy_lexer) {
@@ -424,19 +405,22 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                         Ok(new_stage) => new_stage,
                     };
 
+                    let lexer_end = lexer.span().end;
                     let mut ptype_lexer = PtypeToken::lexer(lexer.remainder());
 
-                    let props_res =
+                    let raw_part_end =
                         match parse_ptype_properties(&mut ptype_lexer, &mut cur_res.result) {
                             Err(e) => return Err(e),
-                            Ok(properties) => properties,
+                            Ok(raw_part_end) => raw_part_end,
                         };
 
                     lexer.bump(ptype_lexer.span().end);
 
                     stage = Stage::WantIdentifier;
                     match cur_res.result {
-                        Some(ParseCurrentResultChoice::Dkim(dkim_res)) => {
+                        Some(ParseCurrentResultChoice::Dkim(mut dkim_res)) => {
+                            dkim_res.raw =
+                                Some(&lexer.source()[raw_part_start..lexer_end + raw_part_end]);
                             res.dkim_result.push(dkim_res)
                         }
                         _ => {}
@@ -446,22 +430,10 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                 Ok(AuthResultToken::ForwardSlash) => {
                     let mut version_lexer = VersionToken::lexer(lexer.remainder());
 
-                    /*
-                    let new_stage = match stage {
-                        Stage::WantAuthEqual => Stage::WantAuthResult,
-                        Stage::WantSpfEqual => Stage::WantSpfResult,
-                        Stage::WantDkimEqual => Stage::WantDkimResult,
-                        Stage::WantIpRevEqual => Stage::WantIpRevResult,
-                        _ => {
-                            return Err(ResultCodeError::UnexpectedForwardSlash);
-                        }
-                    }; */
-
                     let version_res = match parse_version(&mut version_lexer) {
                         Ok(version) => version,
                         Err(e) => return Err(e),
                     };
-                    //stage = new_stage;
                     lexer.bump(version_lexer.span().end);
                 }
                 Ok(AuthResultToken::CommentStart) => {
@@ -496,7 +468,6 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                 }
             }
         }
-        //panic!("res = {:?}", res);
         Ok(res)
     }
 }

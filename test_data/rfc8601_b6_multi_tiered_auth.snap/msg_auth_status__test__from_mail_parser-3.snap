@@ -1,14 +1,17 @@
 ---
 source: src/lib.rs
-assertion_line: 74
 expression: "&status"
 ---
 Ok(
     MessageAuthStatus {
         results: [
             AuthenticationResults {
-                a: None,
-                host: None,
+                host: Some(
+                    HostVersion {
+                        host: "example.com",
+                        version: None,
+                    },
+                ),
                 smtp_auth_result: [],
                 spf_result: [],
                 dkim_result: [
@@ -24,6 +27,9 @@ Ok(
                         header_b: None,
                         header_a: None,
                         header_s: None,
+                        raw: Some(
+                            "dkim=pass reason=\"good signature\"\n        header.i=@mail-router.example.net",
+                        ),
                     },
                     DkimResult {
                         code: Fail,
@@ -37,14 +43,24 @@ Ok(
                         header_b: None,
                         header_a: None,
                         header_s: None,
+                        raw: Some(
+                            "dkim=fail reason=\"bad signature\"\n        header.i=@newyork.example.com",
+                        ),
                     },
                 ],
                 iprev_result: [],
                 none_done: false,
+                raw: Some(
+                    "example.com;\n      dkim=pass reason=\"good signature\"\n        header.i=@mail-router.example.net;\n      dkim=fail reason=\"bad signature\"\n        header.i=@newyork.example.com",
+                ),
             },
             AuthenticationResults {
-                a: None,
-                host: None,
+                host: Some(
+                    HostVersion {
+                        host: "example.net",
+                        version: None,
+                    },
+                ),
                 smtp_auth_result: [],
                 spf_result: [],
                 dkim_result: [
@@ -58,10 +74,16 @@ Ok(
                         header_b: None,
                         header_a: None,
                         header_s: None,
+                        raw: Some(
+                            "dkim=pass (good signature) header.i=@newyork.example.com",
+                        ),
                     },
                 ],
                 iprev_result: [],
                 none_done: false,
+                raw: Some(
+                    "example.net;\n      dkim=pass (good signature) header.i=@newyork.example.com",
+                ),
             },
         ],
     },

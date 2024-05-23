@@ -136,10 +136,16 @@ impl PtypeStage {
 pub fn parse_ptype_properties<'hdr>(
     lexer: &mut Lexer<'hdr, PtypeToken<'hdr>>,
     cur_res: &mut Option<ParseCurrentResultChoice<'hdr>>,
-) -> Result<(), ResultCodeError> {
+) -> Result<usize, ResultCodeError> {
     let mut stage = PtypeStage::WantPtype;
     let mut cur_ptype: PtypeChoice = PtypeChoice::Nothing;
     let mut cur_property: PropTypeKey = PropTypeKey::Nothing;
+
+    let mut parsed_start = lexer.span().start;
+    let mut parsed_end = lexer.span().start;
+    let mut parsed_modifier = 0;
+
+    let mut props_started = false;
 
     let mut cur_res_choice = match &cur_res {
         Some(choice) => choice,
@@ -149,6 +155,7 @@ pub fn parse_ptype_properties<'hdr>(
     while let Some(token) = lexer.next() {
         match token {
             Ok(PtypeToken::CommentStart) => {
+                props_started = true;
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
                     Ok(comment) => {}
@@ -159,6 +166,7 @@ pub fn parse_ptype_properties<'hdr>(
             Ok(PtypeToken::PtypeSmtp | PtypeToken::PtypeHeader | PtypeToken::PtypePolicy)
                 if stage == PtypeStage::WantPtype =>
             {
+                props_started = true;
                 let token_unwrap = token.expect("BUG: Incorrect gating.");
                 let cur_ptype_try =
                     PtypeChoice::from_associated_method_ptype(cur_res, &token_unwrap);
@@ -194,12 +202,19 @@ pub fn parse_ptype_properties<'hdr>(
             }
 
             Ok(PtypeToken::FieldSep) => {
+                if props_started == true {
+                    parsed_modifier += 1;
+                }
                 break;
             }
             Ok(PtypeToken::WhiteSpaces(ref wsh)) if stage.should_ignore_whitespace() => {
+                if props_started == false {
+                    parsed_start = lexer.span().end;
+                }
                 // cont
             }
             Ok(PtypeToken::Reason) if stage == PtypeStage::WantPtype => {
+                props_started = true;
                 stage = PtypeStage::WantReasonEq;
             }
             Ok(PtypeToken::Equal) if stage == PtypeStage::WantReasonEq => {
@@ -261,7 +276,12 @@ pub fn parse_ptype_properties<'hdr>(
             }
         }
     }
-    Ok(())
+
+    if props_started == true {
+        parsed_end = lexer.span().end - parsed_modifier;
+    }
+
+    Ok(parsed_end)
 }
 
 #[cfg(test)]
