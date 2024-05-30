@@ -1,9 +1,0 @@
----
-source: src/lib.rs
-expression: "&status"
----
-Ok(
-    MessageAuthStatus {
-        results: [],
-    },
-)
