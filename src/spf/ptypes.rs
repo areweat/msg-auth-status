@@ -18,9 +18,11 @@ pub enum SpfSmtp<'hdr> {
     Helo(&'hdr str),
 }
 
+/*
 #[derive(Clone, Debug, PartialEq)]
 pub enum SpfPtype {
     Smtp,
     SmtpMailFrom,
     SmtpHelo,
 }
+*/

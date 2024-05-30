@@ -1,24 +1,7 @@
-//! SPF ptype and it's properties
-//!
-//! See IANA Assignments
+//! Parsing spf property types & values
 //! https://www.iana.org/assignments/email-auth/email-auth.xhtml
-//!
-//! And SPF in RFC 8601 s. 2.7.2
 
-#[derive(Debug)]
-pub enum SpfProperty<'hdr> {
-    Smtp(SpfSmtp<'hdr>),
-}
+use super::*;
 
-#[derive(Debug)]
-pub enum SpfSmtp<'hdr> {
-    MailFrom(&'hdr str),
-    Helo(&'hdr str),
-}
-
-#[derive(Debug)]
-pub enum SpfPtype {
-    Smtp,
-    SmtpMailFrom,
-    SmtpHelo,
-}
+pub mod spf_property_key;
+pub mod spf_property_value;

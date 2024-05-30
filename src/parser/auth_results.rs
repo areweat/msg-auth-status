@@ -52,7 +52,10 @@ pub enum ResultCodeError {
     PropertyValuesNotImplemented,
     RunAwayComment,
     RunAwayDkimPropertyKey,
+    RunAwaySpfPropertyKey,
+    RunAwaySpfPropertyValue,
     UnexpectedForwardSlash,
+    ParseCurrentPushNotImplemented,
 }
 
 impl TryFrom<AuthResultToken<'_>> for SmtpAuthResultCode {
@@ -423,7 +426,12 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                                 Some(&lexer.source()[raw_part_start..lexer_end + raw_part_end]);
                             res.dkim_result.push(dkim_res)
                         }
-                        _ => {}
+                        Some(ParseCurrentResultChoice::Spf(mut spf_res)) => {
+                            spf_res.raw =
+                                Some(&lexer.source()[raw_part_start..lexer_end + raw_part_end]);
+                            res.spf_result.push(spf_res)
+                        }
+                        _ => return Err(ResultCodeError::ParseCurrentPushNotImplemented),
                     }
                     cur_res = ParseCurrentResultCode::default();
                 }

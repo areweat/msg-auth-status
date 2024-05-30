@@ -6,6 +6,18 @@ pub struct SpfResult<'hdr> {
     pub reason: Option<&'hdr str>,
     pub smtp_mailfrom: Option<&'hdr str>,
     pub smtp_helo: Option<&'hdr str>,
+    pub raw: Option<&'hdr str>,
+}
+
+impl<'hdr> SpfResult<'hdr> {
+    pub(crate) fn set_smtp(&mut self, prop: &ptypes::SpfSmtp<'hdr>) -> bool {
+        match prop {
+            ptypes::SpfSmtp::MailFrom(val) => self.smtp_mailfrom = Some(val),
+            ptypes::SpfSmtp::Helo(val) => self.smtp_helo = Some(val),
+            _ => {}
+        }
+        true
+    }
 }
 
 /// SPF Result Codes - s.2.7.2
