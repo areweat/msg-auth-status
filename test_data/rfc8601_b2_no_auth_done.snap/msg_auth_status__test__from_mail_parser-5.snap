@@ -1,0 +1,28 @@
+---
+source: src/lib.rs
+expression: "&status"
+---
+Ok(
+    MessageAuthStatus {
+        results: [
+            AuthenticationResults {
+                host: Some(
+                    HostVersion {
+                        host: "example.org",
+                        version: Some(
+                            1,
+                        ),
+                    },
+                ),
+                smtp_auth_result: [],
+                spf_result: [],
+                dkim_result: [],
+                iprev_result: [],
+                none_done: true,
+                raw: Some(
+                    "example.org 1; none",
+                ),
+            },
+        ],
+    },
+)
