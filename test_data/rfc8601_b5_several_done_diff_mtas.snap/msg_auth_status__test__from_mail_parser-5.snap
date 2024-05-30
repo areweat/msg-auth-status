@@ -1,0 +1,80 @@
+---
+source: src/lib.rs
+expression: "&status"
+---
+Ok(
+    MessageAuthStatus {
+        results: [
+            AuthenticationResults {
+                host: Some(
+                    HostVersion {
+                        host: "example.com",
+                        version: None,
+                    },
+                ),
+                smtp_auth_result: [],
+                spf_result: [],
+                dkim_result: [
+                    DkimResult {
+                        code: Pass,
+                        reason: None,
+                        header_d: Some(
+                            "example.com",
+                        ),
+                        header_i: None,
+                        header_b: None,
+                        header_a: None,
+                        header_s: None,
+                        raw: Some(
+                            "dkim=pass (good signature) header.d=example.com",
+                        ),
+                    },
+                ],
+                iprev_result: [],
+                none_done: false,
+                raw: Some(
+                    "example.com;\n          dkim=pass (good signature) header.d=example.com",
+                ),
+            },
+            AuthenticationResults {
+                host: Some(
+                    HostVersion {
+                        host: "example.com",
+                        version: None,
+                    },
+                ),
+                smtp_auth_result: [
+                    SmtpAuthResult {
+                        code: Pass,
+                        smtp_auth: Some(
+                            "sender@example.com",
+                        ),
+                        smtp_mailfrom: None,
+                        raw: Some(
+                            "auth=pass (cram-md5) smtp.auth=sender@example.com",
+                        ),
+                    },
+                ],
+                spf_result: [
+                    SpfResult {
+                        code: Fail,
+                        reason: None,
+                        smtp_mailfrom: Some(
+                            "example.com",
+                        ),
+                        smtp_helo: None,
+                        raw: Some(
+                            "spf=fail smtp.mailfrom=example.com",
+                        ),
+                    },
+                ],
+                dkim_result: [],
+                iprev_result: [],
+                none_done: false,
+                raw: Some(
+                    "example.com;\n          auth=pass (cram-md5) smtp.auth=sender@example.com;\n          spf=fail smtp.mailfrom=example.com",
+                ),
+            },
+        ],
+    },
+)

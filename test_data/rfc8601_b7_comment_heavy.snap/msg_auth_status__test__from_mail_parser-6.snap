@@ -1,0 +1,41 @@
+---
+source: src/lib.rs
+expression: "&status"
+---
+Ok(
+    MessageAuthStatus {
+        results: [
+            AuthenticationResults {
+                host: Some(
+                    HostVersion {
+                        host: "foo.example.net",
+                        version: Some(
+                            1,
+                        ),
+                    },
+                ),
+                smtp_auth_result: [],
+                spf_result: [],
+                dkim_result: [
+                    DkimResult {
+                        code: Fail,
+                        reason: None,
+                        header_d: None,
+                        header_i: None,
+                        header_b: None,
+                        header_a: None,
+                        header_s: None,
+                        raw: Some(
+                            "dkim (Because I like it) / 1 (One yay) = (wait for it) fail\n      policy (A dot can go here) . (like that) expired\n      (this surprised me) = (as I wasn't expecting it) 1362471462",
+                        ),
+                    },
+                ],
+                iprev_result: [],
+                none_done: false,
+                raw: Some(
+                    "foo.example.net (foobar) 1 (baz);\n    dkim (Because I like it) / 1 (One yay) = (wait for it) fail\n      policy (A dot can go here) . (like that) expired\n      (this surprised me) = (as I wasn't expecting it) 1362471462",
+                ),
+            },
+        ],
+    },
+)
