@@ -70,14 +70,16 @@ mod test {
         //panic!("snapshot_path = {:?}", new_snapshot_path);
 
         insta::with_settings!({snapshot_path => new_snapshot_path}, {
-            let data = load_test_data(file_path.to_str().unwrap());
+            insta::allow_duplicates! {
+                let data = load_test_data(file_path.to_str().unwrap());
 
-            let parser = mail_parser::MessageParser::default();
+                let parser = mail_parser::MessageParser::default();
 
-            let parsed = parser.parse(&data).unwrap();
+                let parsed = parser.parse(&data).unwrap();
 
-            let status = MessageAuthStatus::from_mail_parser(&parsed);
-            assert_debug_snapshot!(&status);
+                let status = MessageAuthStatus::from_mail_parser(&parsed);
+                assert_debug_snapshot!(&status);
+            }
         });
     }
 }
