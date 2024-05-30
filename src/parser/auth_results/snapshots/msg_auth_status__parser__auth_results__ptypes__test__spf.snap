@@ -1,0 +1,20 @@
+---
+source: src/parser/auth_results/ptypes.rs
+expression: cur_spf
+---
+ParseCurrentResultCode {
+    result: Some(
+        Spf(
+            SpfResult {
+                code: Unknown,
+                reason: None,
+                smtp_mailfrom: Some(
+                    "example.net",
+                ),
+                smtp_helo: None,
+                raw: None,
+            },
+        ),
+    ),
+    raw: None,
+}
