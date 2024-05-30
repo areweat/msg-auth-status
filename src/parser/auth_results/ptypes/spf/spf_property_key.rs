@@ -38,7 +38,7 @@ pub enum SpfSmtpPropertyKeyToken<'hdr> {
     #[token("mailfrom", priority = 1)]
     MailFrom,
 
-    #[token("token", priority = 1)]
+    #[token("helo", priority = 1)]
     Helo,
 
     #[token("(", priority = 2)]
