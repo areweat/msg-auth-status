@@ -32,6 +32,22 @@ impl<'hdr> TryFrom<DkimHeaderPropertyKeyToken<'hdr>> for DkimHeaderPropertyKey {
     }
 }
 
+#[derive(Debug, PartialEq)]
+pub enum DkimPolicyPropertyKey<'hdr> {
+    Unknown(&'hdr str),
+}
+
+impl<'hdr> TryFrom<DkimPolicyPropertyKeyToken<'hdr>> for DkimPolicyPropertyKey<'hdr> {
+    type Error = ResultCodeError;
+    fn try_from(token: DkimPolicyPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
+        let okk = match token {
+            DkimPolicyPropertyKeyToken::Unknown(val) => Self::Unknown(val),
+            _ => return Err(ResultCodeError::ParsePtypeBugInvalidProperty),
+        };
+        Ok(okk)
+    }
+}
+
 //----------
 // Parsing dkim property
 // https://www.iana.org/assignments/email-auth/email-auth.xhtml
@@ -108,7 +124,67 @@ pub fn parse_dkim_header_property_key<'hdr>(
                 let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
 
                 panic!(
-                    "parse_dkim_property_key -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
+                    "parse_dkim_header_property_key -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
+                    token,
+                    lexer.span(),
+                    lexer.source(),
+                    cut_span,
+	                cut_slice,
+                );
+            }
+        }
+    }
+    Err(ResultCodeError::RunAwayDkimPropertyKey)
+}
+
+//----------
+// Parsing dkim policy property
+// https://www.iana.org/assignments/email-auth/email-auth.xhtml
+//----------
+
+#[derive(Debug, Logos)]
+pub enum DkimPolicyPropertyKeyToken<'hdr> {
+    #[token("(", priority = 1)]
+    CommentStart,
+
+    #[regex(r"[a-zA-Z0-9]+", |lex| lex.slice(), priority = 2)]
+    Unknown(&'hdr str),
+
+    #[regex(r"\s+", |lex| lex.slice(), priority = 3)]
+    WhiteSpaces(&'hdr str),
+}
+
+pub fn parse_dkim_policy_property_key<'hdr>(
+    lexer: &mut Lexer<'hdr, DkimPolicyPropertyKeyToken<'hdr>>,
+) -> Result<DkimPolicyPropertyKey<'hdr>, ResultCodeError> {
+    while let Some(token) = lexer.next() {
+        match token {
+            Ok(DkimPolicyPropertyKeyToken::Unknown(val)) => {
+                let property = token.map_err(|_| ResultCodeError::ParsePtypeBugPropertyGating)?;
+                let mapped_property_res: Result<DkimPolicyPropertyKey<'hdr>, ResultCodeError> =
+                    property.try_into();
+                let mapped_property = mapped_property_res
+                    .map_err(|_| ResultCodeError::ParsePtypeBugInvalidProperty)?;
+                return Ok(mapped_property);
+            }
+            Ok(DkimPolicyPropertyKeyToken::WhiteSpaces(_)) => {
+                // cont
+            }
+            Ok(DkimPolicyPropertyKeyToken::CommentStart) => {
+                let mut comment_lexer = CommentToken::lexer(lexer.remainder());
+                match parse_comment(&mut comment_lexer) {
+                    Ok(comment) => {}
+                    Err(e) => return Err(e),
+                }
+                lexer.bump(comment_lexer.span().end);
+                //*lexer = X::lexer(comment_lexer.remainder());
+            }
+            _ => {
+                let cut_slice = &lexer.source()[lexer.span().start..];
+                let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
+
+                panic!(
+                    "parse_dkim_policy_property_key -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
                     token,
                     lexer.span(),
                     lexer.source(),

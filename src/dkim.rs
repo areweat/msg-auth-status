@@ -24,6 +24,10 @@ impl<'hdr> DkimResult<'hdr> {
         }
         true
     }
+    // TODO: Not supported
+    pub(crate) fn set_policy(&mut self, prop: &ptypes::DkimPolicy<'hdr>) -> bool {
+        true
+    }
 }
 
 /// DKIM Result Codes - s.2.7.1

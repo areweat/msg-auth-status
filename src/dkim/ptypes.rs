@@ -12,6 +12,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq)]
 pub enum DkimProperty<'hdr> {
     Header(DkimHeader<'hdr>),
+    Policy(DkimPolicy<'hdr>),
 }
 
 /// The 'q' Tag - see RFC 6376 s. 3.5
@@ -21,6 +22,12 @@ pub enum DkimQueryMethod<'hdr> {
     Dns,
     /// Unknown
     Unknown(&'hdr str),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum DkimPolicy<'hdr> {
+    /// Unknown
+    Unknown(&'hdr str, &'hdr str),
 }
 
 /// See RFC 6376 s. 3.5

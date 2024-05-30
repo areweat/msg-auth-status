@@ -13,14 +13,16 @@ pub enum CommentToken<'hdr> {
 
 pub fn parse_comment<'hdr>(
     lexer: &mut Lexer<'hdr, CommentToken<'hdr>>,
-) -> Result<(), ResultCodeError> {
+) -> Result<Option<&'hdr str>, ResultCodeError> {
+    let mut ret_comment: Option<&'hdr str> = None;
     while let Some(token) = lexer.next() {
         match token {
             Ok(CommentToken::Comment(comment)) => {
+                ret_comment = Some(comment);
                 // ignore
             }
             Ok(CommentToken::CommentEnd) => {
-                return Ok(());
+                return Ok(ret_comment);
             }
             _ => {
                 panic!(

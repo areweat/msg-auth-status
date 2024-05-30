@@ -37,9 +37,11 @@ use auth::auth_property_value::{parse_auth_smtp_property_value, AuthSmtpProperty
 
 mod dkim;
 use dkim::dkim_property_key::{
-    parse_dkim_header_property_key, DkimHeaderPropertyKey, DkimHeaderPropertyKeyToken,
+    parse_dkim_header_property_key, parse_dkim_policy_property_key, DkimHeaderPropertyKey,
+    DkimHeaderPropertyKeyToken, DkimPolicyPropertyKey, DkimPolicyPropertyKeyToken,
 };
 use dkim::dkim_property_value::{parse_dkim_header_property_value, DkimHeaderPropertyValueToken};
+use dkim::dkim_property_value::{parse_dkim_policy_property_value, DkimPolicyPropertyValueToken};
 
 //------------------------------------------------------------------------
 // IpRev ptypes
@@ -68,12 +70,13 @@ use spf::spf_property_value::{parse_spf_smtp_property_value, SpfSmtpPropertyValu
 //------------------------------------------------------------------------
 
 #[derive(Debug, Default, PartialEq)]
-pub enum PropTypeKey {
+pub enum PropTypeKey<'hdr> {
     #[default]
     Nothing,
     //Auth(AuthPtype),
     AuthSmtp(AuthSmtpPropertyKey),
     DkimHeader(DkimHeaderPropertyKey),
+    DkimPolicy(DkimPolicyPropertyKey<'hdr>),
     SpfSmtp(SpfSmtpPropertyKey),
     IpRevPolicy(IpRevPolicyPropertyKey),
     //Dmarc(DmarcPtype),
@@ -178,7 +181,7 @@ pub fn parse_ptype_properties<'hdr>(
 ) -> Result<usize, ResultCodeError> {
     let mut stage = PtypeStage::WantPtype;
     let mut cur_ptype: PtypeChoice = PtypeChoice::Nothing;
-    let mut cur_property: PropTypeKey = PropTypeKey::Nothing;
+    let mut cur_property: PropTypeKey<'hdr> = PropTypeKey::Nothing;
 
     let mut parsed_start = lexer.span().start;
     let mut parsed_end = lexer.span().start;
@@ -196,10 +199,10 @@ pub fn parse_ptype_properties<'hdr>(
             Ok(PtypeToken::CommentStart) => {
                 props_started = true;
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
-                match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
+                let comment = match parse_comment(&mut comment_lexer) {
+                    Ok(comment) => comment,
                     Err(e) => return Err(e),
-                }
+                };
                 lexer.bump(comment_lexer.span().end);
             }
             Ok(PtypeToken::PtypeSmtp | PtypeToken::PtypeHeader | PtypeToken::PtypePolicy)
@@ -234,6 +237,17 @@ pub fn parse_ptype_properties<'hdr>(
                             };
                         lexer.bump(property_key_lexer.span().end);
                         PropTypeKey::DkimHeader(property_key)
+                    }
+                    PtypeChoice::DkimPolicy => {
+                        let mut property_key_lexer =
+                            DkimPolicyPropertyKeyToken::lexer(lexer.remainder());
+                        let property_key =
+                            match parse_dkim_policy_property_key(&mut property_key_lexer) {
+                                Err(e) => return Err(e),
+                                Ok(property_key) => property_key,
+                            };
+                        lexer.bump(property_key_lexer.span().end);
+                        PropTypeKey::DkimPolicy(property_key)
                     }
                     PtypeChoice::IpRevPolicy => {
                         let mut property_key_lexer =
@@ -323,6 +337,25 @@ pub fn parse_ptype_properties<'hdr>(
                         match cur_res {
                             Some(ParseCurrentResultChoice::Dkim(ref mut dkim_res)) => {
                                 dkim_res.set_header(&property_value);
+                            }
+                            _ => {}
+                        }
+                    }
+                    PropTypeKey::DkimPolicy(ref property) => {
+                        let mut property_value_lexer =
+                            DkimPolicyPropertyValueToken::lexer(lexer.remainder());
+                        let property_value = match parse_dkim_policy_property_value(
+                            &mut property_value_lexer,
+                            &property,
+                        ) {
+                            Err(e) => return Err(e),
+                            Ok(property_value) => property_value,
+                        };
+                        lexer.bump(property_value_lexer.span().end);
+
+                        match cur_res {
+                            Some(ParseCurrentResultChoice::Dkim(ref mut dkim_res)) => {
+                                dkim_res.set_policy(&property_value);
                             }
                             _ => {}
                         }
