@@ -18,6 +18,9 @@ use super::{parse_reason, ReasonToken};
 use super::{ParseCurrentResultChoice, ParseCurrentResultCode};
 use logos::{Lexer, Logos};
 
+//mod policy;
+//mod dmarc;
+
 //------------------------------------------------------------------------
 // SMTP Auth ptypes
 //------------------------------------------------------------------------
@@ -38,9 +41,17 @@ use dkim::dkim_property_key::{
 };
 use dkim::dkim_property_value::{parse_dkim_header_property_value, DkimHeaderPropertyValueToken};
 
-mod dmarc;
+//------------------------------------------------------------------------
+// IpRev ptypes
+//------------------------------------------------------------------------
+
 mod iprev;
-//mod policy;
+use iprev::iprev_property_key::{
+    parse_iprev_policy_property_key, IpRevPolicyPropertyKey, IpRevPolicyPropertyKeyToken,
+};
+use iprev::iprev_property_value::{
+    parse_iprev_policy_property_value, IpRevPolicyPropertyValueToken,
+};
 
 //------------------------------------------------------------------------
 // SPF ptypes
@@ -64,6 +75,7 @@ pub enum PropTypeKey {
     AuthSmtp(AuthSmtpPropertyKey),
     DkimHeader(DkimHeaderPropertyKey),
     SpfSmtp(SpfSmtpPropertyKey),
+    IpRevPolicy(IpRevPolicyPropertyKey),
     //Dmarc(DmarcPtype),
     //IpRev(IpRevPtype),
     //Spf(SpfPtype),
@@ -223,6 +235,17 @@ pub fn parse_ptype_properties<'hdr>(
                         lexer.bump(property_key_lexer.span().end);
                         PropTypeKey::DkimHeader(property_key)
                     }
+                    PtypeChoice::IpRevPolicy => {
+                        let mut property_key_lexer =
+                            IpRevPolicyPropertyKeyToken::lexer(lexer.remainder());
+                        let property_key =
+                            match parse_iprev_policy_property_key(&mut property_key_lexer) {
+                                Err(e) => return Err(e),
+                                Ok(property_key) => property_key,
+                            };
+                        lexer.bump(property_key_lexer.span().end);
+                        PropTypeKey::IpRevPolicy(property_key)
+                    }
                     PtypeChoice::SpfSmtp => {
                         let mut property_key_lexer =
                             SpfSmtpPropertyKeyToken::lexer(lexer.remainder());
@@ -300,6 +323,25 @@ pub fn parse_ptype_properties<'hdr>(
                         match cur_res {
                             Some(ParseCurrentResultChoice::Dkim(ref mut dkim_res)) => {
                                 dkim_res.set_header(&property_value);
+                            }
+                            _ => {}
+                        }
+                    }
+                    PropTypeKey::IpRevPolicy(ref property) => {
+                        let mut property_value_lexer =
+                            IpRevPolicyPropertyValueToken::lexer(lexer.remainder());
+                        let property_value = match parse_iprev_policy_property_value(
+                            &mut property_value_lexer,
+                            &property,
+                        ) {
+                            Err(e) => return Err(e),
+                            Ok(property_value) => property_value,
+                        };
+                        lexer.bump(property_value_lexer.span().end);
+
+                        match cur_res {
+                            Some(ParseCurrentResultChoice::IpRev(ref mut iprev_res)) => {
+                                iprev_res.set_policy(&property_value);
                             }
                             _ => {}
                         }

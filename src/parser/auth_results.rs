@@ -54,6 +54,9 @@ pub enum ResultCodeError {
     RunAwayAuthPropertyValue,
     RunAwayComment,
     RunAwayDkimPropertyKey,
+    RunAwayDkimPropertyValue,
+    RunAwayIpRevPropertyKey,
+    RunAwayIpRevPropertyValue,
     RunAwaySpfPropertyKey,
     RunAwaySpfPropertyValue,
     UnexpectedForwardSlash,
@@ -427,6 +430,11 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                             dkim_res.raw =
                                 Some(&lexer.source()[raw_part_start..lexer_end + raw_part_end]);
                             res.dkim_result.push(dkim_res)
+                        }
+                        Some(ParseCurrentResultChoice::IpRev(mut iprev_res)) => {
+                            iprev_res.raw =
+                                Some(&lexer.source()[raw_part_start..lexer_end + raw_part_end]);
+                            res.iprev_result.push(iprev_res)
                         }
                         Some(ParseCurrentResultChoice::Spf(mut spf_res)) => {
                             spf_res.raw =

@@ -9,5 +9,10 @@ use super::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum IpRevProperty<'hdr> {
-    PolicyIpRev(&'hdr str),
+    Policy(IpRevPolicy<'hdr>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum IpRevPolicy<'hdr> {
+    IpRev(&'hdr str),
 }

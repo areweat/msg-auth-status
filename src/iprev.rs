@@ -2,7 +2,18 @@
 pub struct IpRevResult<'hdr> {
     pub code: IpRevResultCode,
     pub reason: Option<&'hdr str>,
-    //    header_i: Option<&'hdr str>,
+    pub policy_iprev: Option<&'hdr str>,
+    pub raw: Option<&'hdr str>,
+}
+
+impl<'hdr> IpRevResult<'hdr> {
+    pub(crate) fn set_policy(&mut self, prop: &ptypes::IpRevPolicy<'hdr>) -> bool {
+        match prop {
+            ptypes::IpRevPolicy::IpRev(val) => self.policy_iprev = Some(val),
+            _ => {}
+        }
+        true
+    }
 }
 
 /// IpRev Result Codes - s.2.7.3
