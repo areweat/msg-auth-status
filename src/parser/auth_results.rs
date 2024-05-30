@@ -50,6 +50,8 @@ pub enum ResultCodeError {
     ParsePtypeNoMethodResult,
     PropertiesNotImplemented,
     PropertyValuesNotImplemented,
+    RunAwayAuthPropertyKey,
+    RunAwayAuthPropertyValue,
     RunAwayComment,
     RunAwayDkimPropertyKey,
     RunAwaySpfPropertyKey,
@@ -430,6 +432,11 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                             spf_res.raw =
                                 Some(&lexer.source()[raw_part_start..lexer_end + raw_part_end]);
                             res.spf_result.push(spf_res)
+                        }
+                        Some(ParseCurrentResultChoice::SmtpAuth(mut auth_res)) => {
+                            auth_res.raw =
+                                Some(&lexer.source()[raw_part_start..lexer_end + raw_part_end]);
+                            res.smtp_auth_result.push(auth_res)
                         }
                         _ => return Err(ResultCodeError::ParseCurrentPushNotImplemented),
                     }

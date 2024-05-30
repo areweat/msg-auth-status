@@ -1,6 +1,6 @@
 //! Property types Parser
 
-use crate::dkim::DkimProperty;
+//use crate::dkim::DkimProperty;
 
 /*
 use crate::auth::AuthProperty;
@@ -18,7 +18,19 @@ use super::{parse_reason, ReasonToken};
 use super::{ParseCurrentResultChoice, ParseCurrentResultCode};
 use logos::{Lexer, Logos};
 
+//------------------------------------------------------------------------
+// SMTP Auth ptypes
+//------------------------------------------------------------------------
+
 mod auth;
+use auth::auth_property_key::{
+    parse_auth_smtp_property_key, AuthSmtpPropertyKey, AuthSmtpPropertyKeyToken,
+};
+use auth::auth_property_value::{parse_auth_smtp_property_value, AuthSmtpPropertyValueToken};
+
+//------------------------------------------------------------------------
+// DKIM ptypes
+//------------------------------------------------------------------------
 
 mod dkim;
 use dkim::dkim_property_key::{
@@ -29,17 +41,27 @@ use dkim::dkim_property_value::{parse_dkim_header_property_value, DkimHeaderProp
 mod dmarc;
 mod iprev;
 //mod policy;
+
+//------------------------------------------------------------------------
+// SPF ptypes
+//------------------------------------------------------------------------
+
 mod spf;
 use spf::spf_property_key::{
     parse_spf_smtp_property_key, SpfSmtpPropertyKey, SpfSmtpPropertyKeyToken,
 };
 use spf::spf_property_value::{parse_spf_smtp_property_value, SpfSmtpPropertyValueToken};
 
+//------------------------------------------------------------------------
+// Ptype Parsing
+//------------------------------------------------------------------------
+
 #[derive(Debug, Default, PartialEq)]
 pub enum PropTypeKey {
     #[default]
     Nothing,
     //Auth(AuthPtype),
+    AuthSmtp(AuthSmtpPropertyKey),
     DkimHeader(DkimHeaderPropertyKey),
     SpfSmtp(SpfSmtpPropertyKey),
     //Dmarc(DmarcPtype),
@@ -212,6 +234,17 @@ pub fn parse_ptype_properties<'hdr>(
                         lexer.bump(property_key_lexer.span().end);
                         PropTypeKey::SpfSmtp(property_key)
                     }
+                    PtypeChoice::AuthSmtp => {
+                        let mut property_key_lexer =
+                            AuthSmtpPropertyKeyToken::lexer(lexer.remainder());
+                        let property_key =
+                            match parse_auth_smtp_property_key(&mut property_key_lexer) {
+                                Err(e) => return Err(e),
+                                Ok(property_key) => property_key,
+                            };
+                        lexer.bump(property_key_lexer.span().end);
+                        PropTypeKey::AuthSmtp(property_key)
+                    }
                     _ => return Err(ResultCodeError::PropertiesNotImplemented),
                 };
                 stage = PtypeStage::WantEq;
@@ -258,7 +291,6 @@ pub fn parse_ptype_properties<'hdr>(
                         let property_value = match parse_dkim_header_property_value(
                             &mut property_value_lexer,
                             &property,
-                            //&mut cur_res,
                         ) {
                             Err(e) => return Err(e),
                             Ok(property_value) => property_value,
@@ -278,7 +310,6 @@ pub fn parse_ptype_properties<'hdr>(
                         let property_value = match parse_spf_smtp_property_value(
                             &mut property_value_lexer,
                             &property,
-                            //&mut cur_res,
                         ) {
                             Err(e) => return Err(e),
                             Ok(property_value) => property_value,
@@ -288,6 +319,25 @@ pub fn parse_ptype_properties<'hdr>(
                         match cur_res {
                             Some(ParseCurrentResultChoice::Spf(ref mut spf_res)) => {
                                 spf_res.set_smtp(&property_value);
+                            }
+                            _ => {}
+                        }
+                    }
+                    PropTypeKey::AuthSmtp(ref property) => {
+                        let mut property_value_lexer =
+                            AuthSmtpPropertyValueToken::lexer(lexer.remainder());
+                        let property_value = match parse_auth_smtp_property_value(
+                            &mut property_value_lexer,
+                            &property,
+                        ) {
+                            Err(e) => return Err(e),
+                            Ok(property_value) => property_value,
+                        };
+                        lexer.bump(property_value_lexer.span().end);
+
+                        match cur_res {
+                            Some(ParseCurrentResultChoice::SmtpAuth(ref mut auth_res)) => {
+                                auth_res.set_smtp(&property_value);
                             }
                             _ => {}
                         }

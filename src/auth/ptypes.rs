@@ -9,10 +9,16 @@ use super::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum AuthProperty<'hdr> {
-    SmtpAuth(&'hdr str),
-    MailFrom(&'hdr str),
+    Smtp(AuthSmtp<'hdr>),
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum AuthSmtp<'hdr> {
+    MailFrom(&'hdr str),
+    Auth(&'hdr str),
+}
+
+/*
 #[derive(Clone, Debug, PartialEq)]
 pub enum AuthPtype {
     Smtp,
@@ -20,3 +26,4 @@ pub enum AuthPtype {
     Mail,
     MailDotAuth,
 }
+*/
