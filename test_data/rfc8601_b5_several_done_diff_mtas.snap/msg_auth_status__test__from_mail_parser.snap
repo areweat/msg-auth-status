@@ -76,5 +76,29 @@ Ok(
                 ),
             },
         ],
+        dkim_signatures: [
+            DkimSignature {
+                v: One,
+                a: Rsa_Sha256,
+                b: "EToRSuvUfQVP3Bkz ... rTB0t0gYnBVCM=",
+                bh: "sEuZGD/pSr7ANysbY3jtdaQ3Xv9xPQtS0m70",
+                c: Some(
+                    Simple,
+                ),
+                d: "example.com",
+                h: "From:Date:To:Subject:\n          Message-Id:Authentication-Results",
+                i: None,
+                l: None,
+                q: None,
+                s: "gatsby",
+                t: Some(
+                    Raw(
+                        "1188964191",
+                    ),
+                ),
+                x: None,
+                z: None,
+            },
+        ],
     },
 )

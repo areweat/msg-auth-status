@@ -1,7 +1,7 @@
 //! Parsing dkim property values
 
-use crate::dkim::ptypes::DkimHeader;
 use crate::dkim::ptypes::DkimPolicy;
+use crate::dkim::DkimHeader;
 use crate::dkim::*;
 
 use super::ResultCodeError;

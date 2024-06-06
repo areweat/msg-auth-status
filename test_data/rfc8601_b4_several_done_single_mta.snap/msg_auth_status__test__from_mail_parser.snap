@@ -72,5 +72,6 @@ Ok(
                 ),
             },
         ],
+        dkim_signatures: [],
     },
 )

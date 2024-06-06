@@ -15,11 +15,14 @@ pub mod dkim;
 pub mod iprev;
 pub mod spf;
 
+use dkim::DkimSignature;
+
 mod parser;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MessageAuthStatus<'hdr> {
     results: Vec<AuthenticationResults<'hdr>>,
+    dkim_signatures: Vec<DkimSignature<'hdr>>,
 }
 
 #[derive(Debug)]
@@ -30,10 +33,19 @@ pub enum Error {
 impl<'hdr> MessageAuthStatus<'hdr> {
     #[cfg(feature = "mail_parser")]
     pub fn from_mail_parser(msg: &'hdr mail_parser::Message<'hdr>) -> Result<Self, Error> {
-        let mut new_self = Self { results: vec![] };
+        let mut new_self = Self {
+            results: vec![],
+            dkim_signatures: vec![],
+        };
 
         new_self.results = msg
             .header_values("Authentication-Results")
+            .into_iter()
+            .map(|mh| mh.try_into().unwrap())
+            .collect();
+
+        new_self.dkim_signatures = msg
+            .header_values("DKIM-Signature")
             .into_iter()
             .map(|mh| mh.try_into().unwrap())
             .collect();
@@ -64,10 +76,7 @@ mod test {
     #[rstest]
     #[cfg(feature = "mail_parser")]
     fn from_mail_parser(#[files("test_data/rfc8601_b*.txt")] file_path: PathBuf) {
-        // set_snapshot_path
-
         let new_snapshot_path = file_path.with_extension("snap");
-        //panic!("snapshot_path = {:?}", new_snapshot_path);
 
         insta::with_settings!({snapshot_path => new_snapshot_path}, {
             insta::allow_duplicates! {

@@ -34,5 +34,6 @@ Ok(
                 ),
             },
         ],
+        dkim_signatures: [],
     },
 )

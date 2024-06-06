@@ -13,13 +13,13 @@ pub struct DkimResult<'hdr> {
 }
 
 impl<'hdr> DkimResult<'hdr> {
-    pub(crate) fn set_header(&mut self, prop: &ptypes::DkimHeader<'hdr>) -> bool {
+    pub(crate) fn set_header(&mut self, prop: &DkimHeader<'hdr>) -> bool {
         match prop {
-            ptypes::DkimHeader::D(val) => self.header_d = Some(val),
-            ptypes::DkimHeader::I(val) => self.header_i = Some(val),
-            ptypes::DkimHeader::B(val) => self.header_b = Some(val),
-            ptypes::DkimHeader::A(val) => self.header_a = Some(val.clone()),
-            ptypes::DkimHeader::S(val) => self.header_s = Some(val),
+            DkimHeader::D(val) => self.header_d = Some(val),
+            DkimHeader::I(val) => self.header_i = Some(val),
+            DkimHeader::B(val) => self.header_b = Some(val),
+            DkimHeader::A(val) => self.header_a = Some(val.clone()),
+            DkimHeader::S(val) => self.header_s = Some(val),
             _ => {}
         }
         true
@@ -65,43 +65,33 @@ pub enum DkimResultCode {
     PermError,
 }
 
+/// The 'q' Tag - see RFC 6376 s. 3.5
 #[derive(Clone, Debug, Default, PartialEq)]
-pub enum DKimCanonicalization<'hdr> {
+pub enum DkimQueryMethod<'hdr> {
+    /// Domain Name System (DNS)
     #[default]
-    /// simple/simple & simple algorithm tolerates almost no modification
-    Simple,
-    /// relaxed/simple & relaxed algorithm tolerates common modifications such
-    /// as whitespace replacement and header field line rewrapping.    
-    Relaxed,
-    /// Unknown RFC does not define
-    Unknown(&'hdr str),
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub enum DkimTimestamp<'hdr> {
-    #[default]
-    Unknown,
-    Raw(&'hdr str),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-#[allow(non_camel_case_types)]
-pub enum DkimAlgorithm<'hdr> {
-    /// Do not use
-    Rsa_Sha1,
-    /// Widely supported
-    Rsa_Sha256,
-    /// Please support this - not widely supported yet
-    Ed25519_Sha256,
-    Unknown(&'hdr str),
-}
-#[derive(Clone, Debug, PartialEq)]
-pub enum DkimVersion<'hdr> {
-    /// RFC just says this should be used
-    One,
-    /// Something else outside RFC
+    DnsTxt,
+    /// Unknown
     Unknown(&'hdr str),
 }
 
 pub mod ptypes;
 pub use ptypes::DkimProperty;
+
+mod algorithm;
+pub use algorithm::{DkimAlgorithm, DkimAlgorithmError};
+
+mod canonicalization;
+pub use canonicalization::{DkimCanonicalization, DkimCanonicalizationError};
+
+mod signature;
+pub use signature::{DkimSignature, DkimSignatureError, DkimTagValueError};
+
+mod header;
+pub use header::{DkimHeader, DkimHeaderError};
+
+mod timestamp;
+pub use timestamp::{DkimTimestamp, DkimTimestampError};
+
+mod version;
+pub use version::{DkimVersion, DkimVersionError};
