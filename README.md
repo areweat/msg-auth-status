@@ -7,22 +7,20 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![MSRV](https://img.shields.io/badge/MSRV-1.70.0-blue)
 
-Parser and Verifier (opt-in) for Message-Authenticated-Status and the associated DKIM-Signatures.
+Parser for Message-Authenticated-Status and the associated DKIM-Signatures.
 
 ## Add
 
 ```ignore
-cargo add msg-auth-status --features verifier
+cargo add msg-auth-status
 ```
 
 ## RFCs
 
 | RFC    | Tick | Description
 | :---   | :--- | :--- |
-| [8601] | ✅ Parsing, Verifying*  | Message Header Field for Indicating Message Authentication Status |
-| [6376] | ✅ Parsing, Verifying*  | Domainkeys Identified Mail (DKIM) Signatures                      |
-
-* Note: This library does not facilitate any DNS lookups, DomainKeys public key must be supplied separately.
+| [8601] | ✅ Parsing | Message Header Field for Indicating Message Authentication Status |
+| [6376] | ✅ Parsing | Domainkeys Identified Mail (DKIM) Signatures                      |
 
 ## See Also
 
