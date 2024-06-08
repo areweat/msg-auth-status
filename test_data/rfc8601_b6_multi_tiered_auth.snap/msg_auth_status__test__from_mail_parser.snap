@@ -4,7 +4,7 @@ expression: "&status"
 ---
 Ok(
     MessageAuthStatus {
-        results: [
+        auth_results: [
             AuthenticationResults {
                 host: Some(
                     HostVersion {
@@ -84,52 +84,6 @@ Ok(
                 raw: Some(
                     "example.net;\n      dkim=pass (good signature) header.i=@newyork.example.com",
                 ),
-            },
-        ],
-        dkim_signatures: [
-            DkimSignature {
-                v: One,
-                a: Rsa_Sha256,
-                b: "oINEO8hgn/gnunsg ... 9n9ODSNFSDij3=",
-                bh: "ftA9J6GtX8OpwUECzHnCkRzKw1uk6FNiLfJl5Nmv49E=",
-                c: Some(
-                    Relaxed,
-                ),
-                d: "mail-router.example.net",
-                h: "From:Date:To:Message-Id:Subject:Authentication-Results",
-                i: None,
-                l: None,
-                q: None,
-                s: "furble",
-                t: Some(
-                    Raw(
-                        "1188964198",
-                    ),
-                ),
-                x: None,
-                z: None,
-            },
-            DkimSignature {
-                v: One,
-                a: Rsa_Sha256,
-                b: "EToRSuvUfQVP3Bkz ... rTB0t0gYnBVCM=",
-                bh: "sEu28nfs9fuZGD/pSr7ANysbY3jtdaQ3Xv9xPQtS0m7=",
-                c: Some(
-                    Simple,
-                ),
-                d: "newyork.example.com",
-                h: "From:Date:To:Message-Id:Subject",
-                i: None,
-                l: None,
-                q: None,
-                s: "gatsby",
-                t: Some(
-                    Raw(
-                        "1188964191",
-                    ),
-                ),
-                x: None,
-                z: None,
             },
         ],
     },

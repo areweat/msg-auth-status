@@ -1,14 +1,22 @@
 #![warn(
     clippy::unwrap_used,
-//    missing_docs,
+    missing_docs,
     rust_2018_idioms,
     unused_lifetimes,
     unused_qualifications
 )]
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 #![doc = include_str!("../README.md")]
 
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+extern crate alloc;
+
+//--------------------------------------------------------
+// All public types
+//--------------------------------------------------------
+
 mod types;
-pub use types::{AuthenticationResults, HostVersion, Prop};
+pub use types::*;
 
 pub mod auth;
 pub mod dkim;
@@ -17,32 +25,63 @@ pub mod spf;
 
 use dkim::DkimSignature;
 
+//--------------------------------------------------------
+// Parsing implementations with type conversions
+//--------------------------------------------------------
+
 mod parser;
 
+//--------------------------------------------------------
+// Public API non-type based
+//--------------------------------------------------------
+
+#[cfg(any(feature = "alloc", feature = "std"))]
 #[derive(Debug, Default)]
 pub struct MessageAuthStatus<'hdr> {
-    results: Vec<AuthenticationResults<'hdr>>,
-    dkim_signatures: Vec<DkimSignature<'hdr>>,
+    auth_results: Vec<AuthenticationResults<'hdr>>,
 }
 
-#[derive(Debug)]
-pub enum Error {
-    ParseNone,
-}
+#[derive(Debug, PartialEq)]
+pub enum MessageAuthStatusError {}
 
 impl<'hdr> MessageAuthStatus<'hdr> {
+    /// Parse all Authentication-Results into allocating Vec from external mail_parser::Message
     #[cfg(feature = "mail_parser")]
-    pub fn from_mail_parser(msg: &'hdr mail_parser::Message<'hdr>) -> Result<Self, Error> {
+    pub fn alloc_from_mail_parser(
+        msg: &'hdr mail_parser::Message<'hdr>,
+    ) -> Result<Self, MessageAuthStatusError> {
         let mut new_self = Self {
-            results: vec![],
-            dkim_signatures: vec![],
+            auth_results: vec![],
         };
 
-        new_self.results = msg
+        new_self.auth_results = msg
             .header_values("Authentication-Results")
             .into_iter()
             .map(|mh| mh.try_into().unwrap())
             .collect();
+
+        Ok(new_self)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum DkimSignaturesError {}
+
+#[cfg(any(feature = "alloc", feature = "std"))]
+#[derive(Debug, Default)]
+pub struct DkimSignatures<'hdr> {
+    dkim_signatures: Vec<DkimSignature<'hdr>>,
+}
+
+impl<'hdr> DkimSignatures<'hdr> {
+    /// Parse all DKIM Signatures into allocating Vec from mail_parser::Message
+    #[cfg(feature = "mail_parser")]
+    pub fn alloc_from_mail_parser(
+        msg: &'hdr mail_parser::Message<'hdr>,
+    ) -> Result<Self, DkimSignaturesError> {
+        let mut new_self = Self {
+            dkim_signatures: vec![],
+        };
 
         new_self.dkim_signatures = msg
             .header_values("DKIM-Signature")
@@ -86,7 +125,7 @@ mod test {
 
                 let parsed = parser.parse(&data).unwrap();
 
-                let status = MessageAuthStatus::from_mail_parser(&parsed);
+                let status = MessageAuthStatus::alloc_from_mail_parser(&parsed);
                 assert_debug_snapshot!(&status);
             }
         });

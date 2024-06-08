@@ -4,7 +4,7 @@ expression: "&status"
 ---
 Ok(
     MessageAuthStatus {
-        results: [
+        auth_results: [
             AuthenticationResults {
                 host: Some(
                     HostVersion {
@@ -72,6 +72,5 @@ Ok(
                 ),
             },
         ],
-        dkim_signatures: [],
     },
 )

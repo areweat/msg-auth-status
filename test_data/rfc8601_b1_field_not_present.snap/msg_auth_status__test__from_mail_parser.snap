@@ -4,7 +4,6 @@ expression: "&status"
 ---
 Ok(
     MessageAuthStatus {
-        results: [],
-        dkim_signatures: [],
+        auth_results: [],
     },
 )

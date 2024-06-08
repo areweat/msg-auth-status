@@ -1,0 +1,83 @@
+Return-Path: <rust-sydney@arewe.at>
+X-Original-To: rustau@pm.me
+Delivered-To: rustau@pm.me
+Authentication-Results: mail.protonmail.ch; dkim=pass (Good 2048 bit
+    rsa-sha256 signature) header.d=arewe.at header.a=rsa-sha256; dkim=pass
+    (Good ed25519-sha256 signature) header.d=arewe.at
+    header.a=ed25519-sha256
+Authentication-Results: mail.protonmail.ch; dmarc=pass (p=reject dis=none)
+ header.from=arewe.at
+Authentication-Results: mail.protonmail.ch; spf=pass smtp.mailfrom=arewe.at
+Authentication-Results: mail.protonmail.ch; arc=none smtp.remote-ip=136.243.83.41
+Authentication-Results: mail.protonmail.ch; dkim=pass (2048-bit key) header.d=arewe.at
+ header.i=@arewe.at header.b="Dq3hIIXB"; dkim=permerror (0-bit key) header.d=arewe.at
+ header.i=@arewe.at header.b="l7vXbjP4"
+Received: from mail.localhost.horse (mail.localhost.horse [136.243.83.41]) (using TLSv1.3
+ with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+  key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256) (No
+ client certificate requested) by mailin039.protonmail.ch (Postfix) with ESMTPS id
+ 4Vw4744L9Mz3C for <rustau@pm.me>; Thu,
+  6 Jun 2024 12:55:12 +0000 (UTC)
+Dkim-Signature: v=1; a=rsa-sha256; s=202405r; d=arewe.at; c=relaxed/relaxed;
+ h=Subject:From:To:Date:Message-ID; t=1717678506; bh=g3zLYH4xKxcPrHOD18z9Yfp
+ Qcnk/GaJedfustWU5uGs=; b=Dq3hIIXBcR1H/QgIVhiVz1Fk7pud9UDd5qehFz+xcy1mKCTfyi
+ Mb2JrJKNk6APVI85kdlC9yCbu9qWBz3p8UaCJG17eIKVHfufzpW/EqG/VbdO00gdu6Ucr16KmqX
+ fs5bMV+ReHvbxjTIRT7OPeyQGEzpt1bHqOuxz2ht8qD2N4ij9n7xalYOB/zouytNvf7gQ9fpaD3
+ V2vS1jnnrECcTEZq5EkjkmNPZG5tIyDBcg4kWC8X7Y4iCWccCYR6CkYPR3bPL59y19R/Qi54pt/
+ 1BizRB4JWzgzcBbiLMemwKevNrijS1fHZEXd6K+Vyw/u3/JZSec2K/E9Dk5n4dp5mEA==;
+Dkim-Signature: v=1; a=ed25519-sha256; s=202405e; d=arewe.at; c=relaxed/relaxed;
+ h=Subject:From:To:Date:Message-ID; t=1717678506; bh=g3zLYH4xKxcPrHOD18z9Yfp
+ Qcnk/GaJedfustWU5uGs=; b=l7vXbjP4RipLZitIU/b6U++T688hX05ByMmcvSPqgRcFM0InLU
+ sEe/jp0BoZZV0pEqi1M8NV2ysQvL45O71ECg==;
+Message-Id: <fcdefce8-6fa3-43ea-b893-576053111b1c@arewe.at>
+Date: Thu, 06 Jun 2024 22:54:48 +1000
+Mime-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: rustau@pm.me
+From: Rust Sydney <rust-sydney@arewe.at>
+Subject: test
+Content-Type: multipart/mixed;boundary=---------------------b3d28354f95161edb35f90cb1470f008
+Content-Transfer-Encoding: 7bit
+X-Pm-Spam: 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
+X-Pm-Origin: external
+X-Pm-Transfer-Encryption: TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+X-Pm-Content-Encryption: on-delivery
+X-Pm-Spamscore: 0
+X-Pm-Spam-Action: inbox
+
+-----------------------b3d28354f95161edb35f90cb1470f008
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;charset=utf-8
+
+test
+
+-----------------------b3d28354f95161edb35f90cb1470f008--

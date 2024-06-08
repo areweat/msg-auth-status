@@ -1,0 +1,179 @@
+Return-Path: <rust-sydney@arewe.at>
+Received: from compute7.internal (compute7.nyi.internal [10.202.2.48])
+	 by sloti53n14 (Cyrus 3.11.0-alpha0-497-g97f96844c-fm-20240526.001-g97f96844) with LMTPA;
+	 Thu, 06 Jun 2024 18:10:05 -0400
+X-Cyrus-Session-Id: sloti53n14-1717711805-3926980-2-12945533921737018750
+X-Sieve: CMU Sieve 3.0
+X-Spam-known-sender: yes ("Address rust-sydney@arewe.at in From header is in addressbook");
+ in-addressbook; 9f345698-7122-404b-a5fb-69e8bc1ac031 ("Autosaved")
+X-Spam-sender-reputation: 500 (none)
+X-Spam-score: 0.0
+X-Spam-hits: HTML_MESSAGE 0.001, ME_SENDERREP_NEUTRAL 0.001, SPF_HELO_PASS -0.001,
+  SPF_PASS -0.001, T_SCC_BODY_TEXT_LINE -0.01, LANGUAGES unknown,
+  BAYES_USED none, SA_VERSION 3.4.6
+X-Spam-source: IP='136.243.83.41', Host='mail.localhost.horse', Country='DE',
+  FromHeader='at', MailFrom='at'
+X-Spam-charsets: plain='UTF-8', html='UTF-8'
+X-Delivered-to: past.job1295@fastmail.com
+X-Mail-from: rust-sydney@arewe.at
+Received: from mx3 ([10.202.2.202])
+  by compute7.internal (LMTPProxy); Thu, 06 Jun 2024 18:10:05 -0400
+Received: from mx3.messagingengine.com (localhost [127.0.0.1])
+	by mailmx.nyi.internal (Postfix) with ESMTP id 3533919600B2
+	for <past.job1295@fastmail.com>; Thu,  6 Jun 2024 18:10:04 -0400 (EDT)
+Received: from mailmx.nyi.internal (localhost [127.0.0.1])
+    by mx3.messagingengine.com (Authentication Milter) with ESMTP
+    id 6F4C278B85D.F10CF19600E9;
+    Thu, 6 Jun 2024 18:10:04 -0400
+ARC-Seal: i=1; a=rsa-sha256; cv=none; d=messagingengine.com; s=fm1; t=
+    1717711804; b=FIg3tZS6/+GRBBUeQhellbXhgsAifkTmH8MC830hAxvnUF8Fcv
+    6yoV6Y4+jxouaS8u73JP0xo257O1EaCXWqvXGF0HGwIYbbQAgwgFoSZ4Ot/Y1DkW
+    YiykFVqQ8jKQycuH7xQSYgkuilx//HA2VpEyXg7N+jA67ORIXWMCN2if0PduFPJW
+    32BtrLGYHBxLwime7ss/qzuO8QNJbldsJETPcItKtddoMZXLLE8UTz9CK5vR2o0y
+    HYAUrM+eUcFxC2x17PFADWGtEHGPUJcxWyMeDWeqaNtS+evX94GUfIR6eQT3B9nH
+    725xpuB4iNVMVbpF+Xmg2isi/3krS/dqBtPQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=
+    messagingengine.com; h=content-type:message-id:date:mime-version
+    :subject:to:references:from:in-reply-to; s=fm1; t=1717711804;
+    bh=v9JBsLLXyo37Tgmb3NluQYnlXFJWx1otz3nDytGqWpY=; b=WJsgd911ide0
+    tEX+XNt49tJPudBHBGHvQBv/qcjsjTXvd0NzjcinIyf+hQErSdNFmwKqNdyzpx35
+    mIMUBdSWsLadl26O0GglgSOjzBIgNtBRVRRym1yaXcX1/v5wyI9Ei3zE1fuGrpd6
+    SaJM1BhNoWlvum504Ud1+tQPrek4M0meGUtz4x8KQeC3E8HOl/5c/LluG7Xc4Vjr
+    jQ0Um0V27EmOesvRCUHo8SNjqNMjBpO84+74Py7LR2lyKjXkeDBYvXxXoTpvodr6
+    9zrcSROXenHGreyl3jkzOdtccBBUaAi+A4qCYaoeYVPlHWGrW3mUsOTiVfgGn/V2
+    WjR4c+QvNQ==
+ARC-Authentication-Results: i=1; mx3.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail.localhost.horse
+    policy.ptr=mail.localhost.horse;
+    bimi=none (No BIMI records found);
+    arc=none (no signatures found);
+    dkim=pass (2048-bit rsa key sha256) header.d=arewe.at header.i=@arewe.at
+    header.b=Nh7CKMWS header.a=rsa-sha256 header.s=202405r;
+    dkim=pass (ed25519 key sha256) header.d=arewe.at header.i=@arewe.at
+    header.b=yBgMwq3y header.a=ed25519-sha256 header.s=202405e;
+    dmarc=pass policy.published-domain-policy=reject
+    policy.applied-disposition=none policy.evaluated-disposition=none
+    (p=reject,d=none,d.eval=none) policy.policy-from=p
+    header.from=arewe.at;
+    iprev=pass smtp.remote-ip=136.243.83.41 (mail.localhost.horse);
+    spf=pass smtp.mailfrom=rust-sydney@arewe.at
+    smtp.helo=mail.localhost.horse
+X-ME-Authentication-Results: mx3.messagingengine.com;
+    x-aligned-from=pass (Address match);
+    x-return-mx=pass header.domain=arewe.at policy.is_org=yes
+      (MX Records found: mail.arewe.at);
+    x-return-mx=pass smtp.domain=arewe.at policy.is_org=yes
+      (MX Records found: mail.arewe.at);
+    x-tls=pass smtp.version=TLSv1.3 smtp.cipher=TLS_AES_256_GCM_SHA384
+      smtp.bits=256/256;
+    x-vs=clean score=0 state=0
+Authentication-Results: mx3.messagingengine.com;
+    x-csa=none;
+    x-me-sender=none;
+    x-ptr=pass smtp.helo=mail.localhost.horse
+      policy.ptr=mail.localhost.horse
+Authentication-Results: mx3.messagingengine.com;
+    bimi=none (No BIMI records found)
+Authentication-Results: mx3.messagingengine.com;
+    arc=none (no signatures found)
+Authentication-Results: mx3.messagingengine.com;
+    dkim=pass (2048-bit rsa key sha256) header.d=arewe.at header.i=@arewe.at
+      header.b=Nh7CKMWS header.a=rsa-sha256 header.s=202405r;
+    dkim=pass (ed25519 key sha256) header.d=arewe.at header.i=@arewe.at
+      header.b=yBgMwq3y header.a=ed25519-sha256 header.s=202405e;
+    dmarc=pass policy.published-domain-policy=reject
+      policy.applied-disposition=none policy.evaluated-disposition=none
+      (p=reject,d=none,d.eval=none) policy.policy-from=p
+      header.from=arewe.at;
+    iprev=pass smtp.remote-ip=136.243.83.41 (mail.localhost.horse);
+    spf=pass smtp.mailfrom=rust-sydney@arewe.at
+      smtp.helo=mail.localhost.horse
+X-ME-VSCause: gggruggvucftvghtrhhoucdtuddrgedvledrvdelledgtdeiucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggvpdfu
+    rfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucenucfjughrpegtkfffgg
+    gfuffvfhfhjgesrgdtreertddvjeenucfhrhhomheptfhushhtucfuhigunhgvhicuoehr
+    uhhsthdqshihughnvgihsegrrhgvfigvrdgrtheqnecuggftrfgrthhtvghrnheptdfgje
+    euueefhfehjefgfeffgefhkeeiffeufeegvddujeehgedtgeelffetgfegnecukfhppedu
+    feeirddvgeefrdekfedrgedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpe
+    hinhgvthepudefiedrvdegfedrkeefrdeguddphhgvlhhopehmrghilhdrlhhotggrlhhh
+    ohhsthdrhhhorhhsvgdpmhgrihhlfhhrohhmpeeorhhushhtqdhshigunhgvhiesrghrvg
+    ifvgdrrghtqedpnhgspghrtghpthhtohepuddprhgtphhtthhopeeophgrshhtrdhjohgs
+    uddvleehsehfrghsthhmrghilhdrtghomheq
+X-ME-VSScore: 0
+X-ME-VSCategory: clean
+X-ME-CSA: none
+X-ME-Received: <xmx:uzNiZsG1xF7Ur2io-Gb1WoT9L7zX7I2nJ9VWfwlB-3HbFQ1juOerHw>
+Received-SPF: pass
+    (arewe.at: 136.243.83.41 is authorized to use 'rust-sydney@arewe.at' in 'mfrom' identity (mechanism 'mx' matched))
+    receiver=mx3.messagingengine.com;
+    identity=mailfrom;
+    envelope-from="rust-sydney@arewe.at";
+    helo=mail.localhost.horse;
+    client-ip=136.243.83.41
+Received: from mail.localhost.horse (mail.localhost.horse [136.243.83.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx3.messagingengine.com (Postfix) with ESMTPS id F10CF19600E9
+	for <past.job1295@fastmail.com>; Thu,  6 Jun 2024 18:09:57 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; s=202405r; d=arewe.at; c=relaxed/relaxed;
+	h=From:To:Subject:Date:Message-ID; t=1717711795; bh=v9JBsLLXyo37Tgmb3NluQYn
+	lXFJWx1otz3nDytGqWpY=; b=Nh7CKMWS6gMfbPYHXw3AlyPeUy0OdCHKkkBEpg5bVzuqLL4b2u
+	FYLRR/GVMDPlcoEh/Sra3RNJy/C6NtFdH2U04+19TxXSjR3IpTJMIJHV1UV6TOS0v0ZoxzNNL3w
+	W5pAs6H1sSt3wJ7wlvM/4NXRpW0QwOkSvkGW2nf2xpP57ZPzYT+/js0IjHUc2tDbWGKGeKOKdhy
+	VEhZYRCAWhXyl83zbO+3a90PqhrGy99B7T1E1B8tBe49AmZGOMPK8DH9OrVZGe1q3TcvLd9P/S9
+	svWhrZePqPT+eQAifY2gkk49mlcm9Pw9vDTj4HB6YjQNFN/dJd5mtVrPcMqjpGUw8hA==;
+DKIM-Signature: v=1; a=ed25519-sha256; s=202405e; d=arewe.at; c=relaxed/relaxed;
+	h=From:To:Subject:Date:Message-ID; t=1717711795; bh=v9JBsLLXyo37Tgmb3NluQYn
+	lXFJWx1otz3nDytGqWpY=; b=yBgMwq3ysWWdIospXKHSUyeKH21I+OzyCOEVwhjHz0v2QCPq/+
+	NxwjMPuRGfQsKnncVSDZ3DUq+7ckteBPCDCg==;
+Content-Type: multipart/alternative;
+ boundary="------------oC09Zychpa2jSMSe73kNzOL8"
+Message-ID: <cc3f663b-ed67-4b82-9ddd-d64b54aad891@arewe.at>
+Date: Fri, 7 Jun 2024 08:09:52 +1000
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: This is a test
+To: past.job1295@fastmail.com
+References: <f1e29daf-34db-498c-a13e-b840331165b7@app.fastmail.com>
+Content-Language: en-US
+From: Rust Sydney <rust-sydney@arewe.at>
+In-Reply-To: <f1e29daf-34db-498c-a13e-b840331165b7@app.fastmail.com>
+
+This is a multi-part message in MIME format.
+--------------oC09Zychpa2jSMSe73kNzOL8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+I am Blåhaj.
+
+On 6/7/24 08:08, past.job1295@fastmail.com wrote:
+> I am the body.
+--------------oC09Zychpa2jSMSe73kNzOL8
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <p>I am Blåhaj.<br>
+    </p>
+    <div class="moz-cite-prefix">On 6/7/24 08:08,
+      <a class="moz-txt-link-abbreviated" href="mailto:past.job1295@fastmail.com">past.job1295@fastmail.com</a> wrote:<br>
+    </div>
+    <blockquote type="cite"
+      cite="mid:f1e29daf-34db-498c-a13e-b840331165b7@app.fastmail.com">
+      <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+      <title></title>
+      <style type="text/css">p.MsoNormal,p.MsoNoSpacing{margin:0}</style>
+      <div>I am the body.</div>
+    </blockquote>
+  </body>
+</html>
+
+--------------oC09Zychpa2jSMSe73kNzOL8--
