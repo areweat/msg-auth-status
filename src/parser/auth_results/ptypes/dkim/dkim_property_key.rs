@@ -1,9 +1,6 @@
 //! Parsing dkim property types & values
-//! https://www.iana.org/assignments/email-auth/email-auth.xhtml
 
-use crate::dkim::*;
-
-use super::ResultCodeError;
+use crate::error::AuthResultsError;
 
 /// IANA Email Authentication Methods ptype / property Mapping stages
 #[derive(Debug, PartialEq)]
@@ -17,7 +14,7 @@ pub enum DkimHeaderPropertyKey {
 }
 
 impl<'hdr> TryFrom<DkimHeaderPropertyKeyToken<'hdr>> for DkimHeaderPropertyKey {
-    type Error = ResultCodeError;
+    type Error = AuthResultsError;
     fn try_from(token: DkimHeaderPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
             DkimHeaderPropertyKeyToken::TagD => Self::TagD,
@@ -26,7 +23,7 @@ impl<'hdr> TryFrom<DkimHeaderPropertyKeyToken<'hdr>> for DkimHeaderPropertyKey {
             DkimHeaderPropertyKeyToken::TagA => Self::TagA,
             DkimHeaderPropertyKeyToken::TagS => Self::TagS,
             DkimHeaderPropertyKeyToken::Rfc5322From => Self::Rfc5322From,
-            _ => return Err(ResultCodeError::ParsePtypeBugInvalidProperty),
+            _ => return Err(AuthResultsError::ParsePtypeBugInvalidProperty),
         };
         Ok(okk)
     }
@@ -38,11 +35,11 @@ pub enum DkimPolicyPropertyKey<'hdr> {
 }
 
 impl<'hdr> TryFrom<DkimPolicyPropertyKeyToken<'hdr>> for DkimPolicyPropertyKey<'hdr> {
-    type Error = ResultCodeError;
+    type Error = AuthResultsError;
     fn try_from(token: DkimPolicyPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
             DkimPolicyPropertyKeyToken::Unknown(val) => Self::Unknown(val),
-            _ => return Err(ResultCodeError::ParsePtypeBugInvalidProperty),
+            _ => return Err(AuthResultsError::ParsePtypeBugInvalidProperty),
         };
         Ok(okk)
     }
@@ -50,7 +47,6 @@ impl<'hdr> TryFrom<DkimPolicyPropertyKeyToken<'hdr>> for DkimPolicyPropertyKey<'
 
 //----------
 // Parsing dkim property
-// https://www.iana.org/assignments/email-auth/email-auth.xhtml
 //----------
 
 use super::{parse_comment, CommentToken};
@@ -89,7 +85,7 @@ pub enum DkimHeaderPropertyKeyToken<'hdr> {
 
 pub fn parse_dkim_header_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, DkimHeaderPropertyKeyToken<'hdr>>,
-) -> Result<DkimHeaderPropertyKey, ResultCodeError> {
+) -> Result<DkimHeaderPropertyKey, AuthResultsError> {
     while let Some(token) = lexer.next() {
         match token {
             Ok(
@@ -100,11 +96,11 @@ pub fn parse_dkim_header_property_key<'hdr>(
                 | DkimHeaderPropertyKeyToken::TagS
                 | DkimHeaderPropertyKeyToken::Rfc5322From,
             ) => {
-                let property = token.map_err(|_| ResultCodeError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<DkimHeaderPropertyKey, ResultCodeError> =
+                let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
+                let mapped_property_res: Result<DkimHeaderPropertyKey, AuthResultsError> =
                     property.try_into();
                 let mapped_property = mapped_property_res
-                    .map_err(|_| ResultCodeError::ParsePtypeBugInvalidProperty)?;
+                    .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
                 return Ok(mapped_property);
             }
             Ok(DkimHeaderPropertyKeyToken::WhiteSpaces(_)) => {
@@ -113,11 +109,10 @@ pub fn parse_dkim_header_property_key<'hdr>(
             Ok(DkimHeaderPropertyKeyToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
+                    Ok(_comment) => {}
                     Err(e) => return Err(e),
                 }
                 lexer.bump(comment_lexer.span().end);
-                //*lexer = X::lexer(comment_lexer.remainder());
             }
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
@@ -134,12 +129,11 @@ pub fn parse_dkim_header_property_key<'hdr>(
             }
         }
     }
-    Err(ResultCodeError::RunAwayDkimPropertyKey)
+    Err(AuthResultsError::RunAwayDkimPropertyKey)
 }
 
 //----------
 // Parsing dkim policy property
-// https://www.iana.org/assignments/email-auth/email-auth.xhtml
 //----------
 
 #[derive(Debug, Logos)]
@@ -156,15 +150,15 @@ pub enum DkimPolicyPropertyKeyToken<'hdr> {
 
 pub fn parse_dkim_policy_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, DkimPolicyPropertyKeyToken<'hdr>>,
-) -> Result<DkimPolicyPropertyKey<'hdr>, ResultCodeError> {
+) -> Result<DkimPolicyPropertyKey<'hdr>, AuthResultsError> {
     while let Some(token) = lexer.next() {
         match token {
-            Ok(DkimPolicyPropertyKeyToken::Unknown(val)) => {
-                let property = token.map_err(|_| ResultCodeError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<DkimPolicyPropertyKey<'hdr>, ResultCodeError> =
+            Ok(DkimPolicyPropertyKeyToken::Unknown(_)) => {
+                let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
+                let mapped_property_res: Result<DkimPolicyPropertyKey<'hdr>, AuthResultsError> =
                     property.try_into();
                 let mapped_property = mapped_property_res
-                    .map_err(|_| ResultCodeError::ParsePtypeBugInvalidProperty)?;
+                    .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
                 return Ok(mapped_property);
             }
             Ok(DkimPolicyPropertyKeyToken::WhiteSpaces(_)) => {
@@ -173,11 +167,10 @@ pub fn parse_dkim_policy_property_key<'hdr>(
             Ok(DkimPolicyPropertyKeyToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
+                    Ok(_comment) => {}
                     Err(e) => return Err(e),
                 }
                 lexer.bump(comment_lexer.span().end);
-                //*lexer = X::lexer(comment_lexer.remainder());
             }
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
@@ -194,5 +187,5 @@ pub fn parse_dkim_policy_property_key<'hdr>(
             }
         }
     }
-    Err(ResultCodeError::RunAwayDkimPropertyKey)
+    Err(AuthResultsError::RunAwayDkimPropertyKey)
 }

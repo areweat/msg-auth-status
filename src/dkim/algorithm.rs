@@ -1,3 +1,6 @@
+//! DKIM Algorithms
+
+/// DKIM Algorithms per IANA and RFC
 #[derive(Clone, Debug, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum DkimAlgorithm<'hdr> {
@@ -7,9 +10,11 @@ pub enum DkimAlgorithm<'hdr> {
     Rsa_Sha256,
     /// Please support this - not widely supported yet
     Ed25519_Sha256,
+    /// Unknown algorithm not specified by RFC / IANA
     Unknown(&'hdr str),
 }
 
+/// Currently no error - may change in future
 #[derive(Debug, PartialEq)]
 pub enum DkimAlgorithmError {}
 

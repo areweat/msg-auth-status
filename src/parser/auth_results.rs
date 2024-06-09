@@ -4,9 +4,10 @@ use logos::{Lexer, Logos};
 
 use crate::auth::{SmtpAuthResult, SmtpAuthResultCode};
 use crate::dkim::{DkimResult, DkimResultCode};
+use crate::error::AuthResultsError;
 use crate::iprev::{IpRevResult, IpRevResultCode};
 use crate::spf::{SpfResult, SpfResultCode};
-use crate::{AuthenticationResults, Prop};
+use crate::AuthenticationResults;
 
 mod comment;
 mod host_version;
@@ -22,49 +23,11 @@ use ptypes::{parse_ptype_properties, PtypeToken};
 use reason::{parse_reason, ReasonToken};
 use version::{parse_version, VersionToken};
 
-use ptypes::PropTypeKey;
-
 #[cfg(feature = "mail_parser")]
 use mail_parser::HeaderValue;
 
-#[derive(Debug)]
-pub enum ResultCodeError {
-    Parse,
-    ParseHost(String),
-    ParsePtypeBugGating,
-    ParsePtypeBugInvalidProperty,
-    ParsePtypeBugPropertyGating,
-    ParsePtypeInvalidPtype,
-    InvalidDkimResult(String),
-    InvalidSpfResult(String),
-    InvalidIpRevResult(String),
-    /// Was not a valid ptype/property per IANA and strict validation was used
-    InvalidProperty,
-    InvalidSmtpAuthResult(String),
-    InvalidResultStage,
-    InvalidVersion,
-    NoAssociatedVersion,
-    NoAssociatedPolicy,
-    NoAssociatedReason,
-    NoHostname,
-    ParsePtypeNoMethodResult,
-    PropertiesNotImplemented,
-    PropertyValuesNotImplemented,
-    RunAwayAuthPropertyKey,
-    RunAwayAuthPropertyValue,
-    RunAwayComment,
-    RunAwayDkimPropertyKey,
-    RunAwayDkimPropertyValue,
-    RunAwayIpRevPropertyKey,
-    RunAwayIpRevPropertyValue,
-    RunAwaySpfPropertyKey,
-    RunAwaySpfPropertyValue,
-    UnexpectedForwardSlash,
-    ParseCurrentPushNotImplemented,
-}
-
 impl TryFrom<AuthResultToken<'_>> for SmtpAuthResultCode {
-    type Error = ResultCodeError;
+    type Error = AuthResultsError;
 
     fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
         let res = match token {
@@ -73,14 +36,14 @@ impl TryFrom<AuthResultToken<'_>> for SmtpAuthResultCode {
             AuthResultToken::Fail => Self::Fail,
             AuthResultToken::TempError => Self::TempError,
             AuthResultToken::PermError => Self::PermError,
-            _ => return Err(ResultCodeError::InvalidSmtpAuthResult("".to_string())),
+            _ => return Err(AuthResultsError::InvalidSmtpAuthResult("".to_string())),
         };
         Ok(res)
     }
 }
 
 impl TryFrom<AuthResultToken<'_>> for DkimResultCode {
-    type Error = ResultCodeError;
+    type Error = AuthResultsError;
 
     fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
         let res = match token {
@@ -91,14 +54,14 @@ impl TryFrom<AuthResultToken<'_>> for DkimResultCode {
             AuthResultToken::Neutral => Self::Neutral,
             AuthResultToken::TempError => Self::TempError,
             AuthResultToken::PermError => Self::PermError,
-            _ => return Err(ResultCodeError::InvalidDkimResult("".to_string())),
+            _ => return Err(AuthResultsError::InvalidDkimResult("".to_string())),
         };
         Ok(res)
     }
 }
 
 impl TryFrom<AuthResultToken<'_>> for SpfResultCode {
-    type Error = ResultCodeError;
+    type Error = AuthResultsError;
 
     fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
         let res = match token {
@@ -110,14 +73,14 @@ impl TryFrom<AuthResultToken<'_>> for SpfResultCode {
             AuthResultToken::Neutral => Self::Neutral,
             AuthResultToken::TempError => Self::TempError,
             AuthResultToken::PermError => Self::PermError,
-            _ => return Err(ResultCodeError::InvalidSpfResult("".to_string())),
+            _ => return Err(AuthResultsError::InvalidSpfResult("".to_string())),
         };
         Ok(res)
     }
 }
 
 impl TryFrom<AuthResultToken<'_>> for IpRevResultCode {
-    type Error = ResultCodeError;
+    type Error = AuthResultsError;
 
     fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
         let res = match token {
@@ -125,7 +88,7 @@ impl TryFrom<AuthResultToken<'_>> for IpRevResultCode {
             AuthResultToken::Fail => Self::Fail,
             AuthResultToken::TempError => Self::TempError,
             AuthResultToken::PermError => Self::PermError,
-            _ => return Err(ResultCodeError::InvalidIpRevResult("".to_string())),
+            _ => return Err(AuthResultsError::InvalidIpRevResult("".to_string())),
         };
         Ok(res)
     }
@@ -183,42 +146,24 @@ enum Stage {
     WantIdentifier,
 
     /// auth = ..
-    WantAuthVersion,
     WantAuthEqual,
     WantAuthResult,
-    GotAuthResult,
 
     /// spf = ...
-    WantSpfVersion,
     WantSpfEqual,
     WantSpfResult,
-    GotSpfResult,
 
     // dkim = ...
-    WantDkimVersion,
     WantDkimEqual,
     WantDkimResult,
-    GotDkimResult,
 
     // iprev = ...
-    WantIpRevVersion,
     WantIpRevEqual,
     WantIpRevResult,
-    GotIpRevResult,
 }
 
 // State machine helpers
 impl Stage {
-    // Is the current token GotResult
-    fn got_result(&self) -> bool {
-        match self {
-            Self::GotAuthResult
-            | Self::GotSpfResult
-            | Self::GotDkimResult
-            | Self::GotIpRevResult => true,
-            _ => false,
-        }
-    }
     // Is the current stage expecting resultset status
     fn is_cur_expect_resultset_want(&self) -> bool {
         match self {
@@ -226,16 +171,6 @@ impl Stage {
             | Self::WantSpfResult
             | Self::WantDkimResult
             | Self::WantIpRevResult => true,
-            _ => false,
-        }
-    }
-    // Is the current stage expecting something after resulset
-    fn is_cur_expect_resultset_got(&self) -> bool {
-        match self {
-            Self::GotAuthResult
-            | Self::GotSpfResult
-            | Self::GotDkimResult
-            | Self::GotIpRevResult => true,
             _ => false,
         }
     }
@@ -292,7 +227,7 @@ fn assign_result_code<'hdr>(
     token: AuthResultToken<'hdr>,
     stage: Stage,
     cur_res: &mut ParseCurrentResultCode<'hdr>,
-) -> Result<Stage, ResultCodeError> {
+) -> Result<(), AuthResultsError> {
     let mut new_res: ParseCurrentResultCode<'hdr> = ParseCurrentResultCode::default();
 
     match stage {
@@ -302,7 +237,7 @@ fn assign_result_code<'hdr>(
             smtp_auth_result.code = result_code;
             new_res.result = Some(ParseCurrentResultChoice::SmtpAuth(smtp_auth_result));
             *cur_res = new_res;
-            Ok(Stage::GotAuthResult)
+            Ok(())
         }
         Stage::WantSpfResult => {
             let result_code = SpfResultCode::try_from(token).map_err(|e| e)?;
@@ -310,7 +245,7 @@ fn assign_result_code<'hdr>(
             spf_result.code = result_code;
             new_res.result = Some(ParseCurrentResultChoice::Spf(spf_result));
             *cur_res = new_res;
-            Ok(Stage::GotSpfResult)
+            Ok(())
         }
         Stage::WantDkimResult => {
             let result_code = DkimResultCode::try_from(token).map_err(|e| e)?;
@@ -318,7 +253,7 @@ fn assign_result_code<'hdr>(
             dkim_result.code = result_code;
             new_res.result = Some(ParseCurrentResultChoice::Dkim(dkim_result));
             *cur_res = new_res;
-            Ok(Stage::GotDkimResult)
+            Ok(())
         }
         Stage::WantIpRevResult => {
             let result_code = IpRevResultCode::try_from(token).map_err(|e| e)?;
@@ -326,36 +261,32 @@ fn assign_result_code<'hdr>(
             iprev_result.code = result_code;
             new_res.result = Some(ParseCurrentResultChoice::IpRev(iprev_result));
             *cur_res = new_res;
-            Ok(Stage::GotIpRevResult)
+            Ok(())
         }
-        // Policy ?
-        Stage::GotDkimResult => match token {
-            AuthResultToken::Policy => panic!("Bingo.."),
-            _ => panic!("Nope. Token really was ... {:?}", token),
-        },
-        _ => Err(ResultCodeError::InvalidResultStage),
+        _ => Err(AuthResultsError::InvalidResultStage),
     }
 }
 
-impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
-    type Error = ResultCodeError;
+impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
+    //type Error = AuthResultsError;
 
-    fn try_from(hval: &'hdr HeaderValue<'hdr>) -> Result<Self, Self::Error> {
+    fn from(hval: &'hdr HeaderValue<'hdr>) -> Self {
         let text = hval.as_text().unwrap();
+
+        let mut res = Self::default();
+        res.raw = Some(text);
 
         let mut host_lexer = HostVersionToken::lexer(&text);
 
         let host = match parse_host_version(&mut host_lexer) {
             Ok(host) => host,
             Err(e) => {
-                return Err(e);
+                res.error = Some(e);
+                return res;
             }
         };
 
         let mut lexer: Lexer<'hdr, AuthResultToken<'hdr>> = host_lexer.morph();
-        let mut res = Self::default();
-
-        res.raw = Some(text);
         res.host = Some(host);
 
         let mut stage = Stage::WantIdentifier;
@@ -388,11 +319,15 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                 Ok(AuthResultToken::Equal) if stage.is_cur_expect_resultset_equal() => {
                     stage.equal_to_result();
                 }
+                // TODO: This is not handled atm - it's cursed.
                 Ok(AuthResultToken::Policy) => {
                     let mut policy_lexer: Lexer<'hdr, PolicyToken<'hdr>> = lexer.morph();
-                    let policy = match parse_policy(&mut policy_lexer) {
+                    let _policy = match parse_policy(&mut policy_lexer) {
                         Ok(policy) => policy,
-                        Err(e) => return Err(e),
+                        Err(e) => {
+                            res.error = Some(e);
+                            break;
+                        }
                     };
                     lexer = policy_lexer.morph();
                 }
@@ -404,21 +339,27 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     | AuthResultToken::NoneNone
                     | AuthResultToken::Neutral,
                 ) if stage.is_cur_expect_resultset_want() => {
-                    let new_stage = match assign_result_code(
+                    match assign_result_code(
                         token.expect("BUG: Matched err?!"),
                         stage.clone(),
                         &mut cur_res,
                     ) {
-                        Err(e) => return Err(e),
-                        Ok(new_stage) => new_stage,
-                    };
+                        Err(e) => {
+                            res.error = Some(e);
+                            break;
+                        }
+                        Ok(()) => {}
+                    }
 
                     let lexer_end = lexer.span().end;
                     let mut ptype_lexer = PtypeToken::lexer(lexer.remainder());
 
                     let raw_part_end =
                         match parse_ptype_properties(&mut ptype_lexer, &mut cur_res.result) {
-                            Err(e) => return Err(e),
+                            Err(e) => {
+                                res.error = Some(e);
+                                break;
+                            }
                             Ok(raw_part_end) => raw_part_end,
                         };
 
@@ -446,24 +387,34 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                                 Some(&lexer.source()[raw_part_start..lexer_end + raw_part_end]);
                             res.smtp_auth_result.push(auth_res)
                         }
-                        _ => return Err(ResultCodeError::ParseCurrentPushNotImplemented),
+                        _ => {
+                            res.error = Some(AuthResultsError::ParseCurrentPushNotImplemented);
+                            break;
+                        }
                     }
                     cur_res = ParseCurrentResultCode::default();
                 }
                 Ok(AuthResultToken::ForwardSlash) => {
                     let mut version_lexer = VersionToken::lexer(lexer.remainder());
 
-                    let version_res = match parse_version(&mut version_lexer) {
+                    // TODO: Care about version ?
+                    let _version_res = match parse_version(&mut version_lexer) {
                         Ok(version) => version,
-                        Err(e) => return Err(e),
+                        Err(e) => {
+                            res.error = Some(e);
+                            break;
+                        }
                     };
                     lexer.bump(version_lexer.span().end);
                 }
                 Ok(AuthResultToken::CommentStart) => {
                     let mut comment_lexer: Lexer<'hdr, CommentToken<'hdr>> = lexer.morph();
                     match parse_comment(&mut comment_lexer) {
-                        Ok(comment) => {}
-                        Err(e) => return Err(e),
+                        Ok(_comment) => {} // TODO: keep comments?
+                        Err(e) => {
+                            res.error = Some(e);
+                            break;
+                        }
                     }
                     lexer = comment_lexer.morph();
                 }
@@ -491,6 +442,6 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                 }
             }
         }
-        Ok(res)
+        res
     }
 }

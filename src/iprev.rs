@@ -1,8 +1,17 @@
+//! iprev method result
+//! iprev" is an attempt to verify that a client appears to
+//! be valid based on some DNS queries.
+
+/// Parsed iprev=..
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct IpRevResult<'hdr> {
+    /// iprev resultcode
     pub code: IpRevResultCode,
+    /// reason = ..
     pub reason: Option<&'hdr str>,
+    /// iprev policy.iprev = ..
     pub policy_iprev: Option<&'hdr str>,
+    /// unparsed
     pub raw: Option<&'hdr str>,
 }
 
@@ -10,17 +19,15 @@ impl<'hdr> IpRevResult<'hdr> {
     pub(crate) fn set_policy(&mut self, prop: &ptypes::IpRevPolicy<'hdr>) -> bool {
         match prop {
             ptypes::IpRevPolicy::IpRev(val) => self.policy_iprev = Some(val),
-            _ => {}
         }
         true
     }
 }
 
 /// IpRev Result Codes - s.2.7.3
-//#[derive(Debug, Default, EnumString, StrumDisplay)]
-//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum IpRevResultCode {
+    /// Result code not seen
     #[default]
     Unknown,
     /// The DNS evaluation succeeded, i.e., the "reverse" and

@@ -1,18 +1,15 @@
 //! iprev ptype and it's properties
-//!
-//! See IANA Assignments
-//! https://www.iana.org/assignments/email-auth/email-auth.xhtml
-//!
-//! And iprev in RFC 8601 s. 2.7
 
-use super::*;
-
+/// iprev ptypes
 #[derive(Clone, Debug, PartialEq)]
 pub enum IpRevProperty<'hdr> {
+    /// iprev.policy
     Policy(IpRevPolicy<'hdr>),
 }
 
+/// iprev ptype policy
 #[derive(Clone, Debug, PartialEq)]
 pub enum IpRevPolicy<'hdr> {
+    /// policy.iprev
     IpRev(&'hdr str),
 }

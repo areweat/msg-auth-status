@@ -1,11 +1,17 @@
 //! SPF Types
 
+/// Parsed SPF Result
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SpfResult<'hdr> {
+    /// Result
     pub code: SpfResultCode,
+    /// Reason if supplied
     pub reason: Option<&'hdr str>,
+    /// smtp.mailfrom
     pub smtp_mailfrom: Option<&'hdr str>,
+    /// smtp.helo
     pub smtp_helo: Option<&'hdr str>,
+    /// Unparsed raw
     pub raw: Option<&'hdr str>,
 }
 
@@ -14,7 +20,6 @@ impl<'hdr> SpfResult<'hdr> {
         match prop {
             ptypes::SpfSmtp::MailFrom(val) => self.smtp_mailfrom = Some(val),
             ptypes::SpfSmtp::Helo(val) => self.smtp_helo = Some(val),
-            _ => {}
         }
         true
     }
@@ -22,10 +27,9 @@ impl<'hdr> SpfResult<'hdr> {
 
 /// SPF Result Codes - s.2.7.2
 /// SPF defined in RFC 7208 s.2.6 - Results evaluation
-//#[derive(Debug, Default, EnumString, StrumDisplay)]
-//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum SpfResultCode {
+    /// Result code not seen
     #[default]
     Unknown,
     /// Either (a) syntactically valid DNS domain name was extracted from the

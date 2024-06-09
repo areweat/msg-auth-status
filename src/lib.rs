@@ -11,19 +11,31 @@
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;
 
-//--------------------------------------------------------
-// All public types
-//--------------------------------------------------------
+//---------------------------------------------------------
+// Error types
+//---------------------------------------------------------
 
-mod types;
-pub use types::*;
+pub mod error;
+
+//---------------------------------------------------------
+// Authentication-Results & DKIM-Signature public types
+//---------------------------------------------------------
 
 pub mod auth;
+pub mod auth_results;
 pub mod dkim;
 pub mod iprev;
 pub mod spf;
 
-use dkim::DkimSignature;
+//--------------------------------------------------------
+// Parsed results holding types re-exported
+//--------------------------------------------------------
+
+// (Multi) Authentication-Results = result1;[resultN];..
+pub use auth_results::AuthenticationResults;
+
+// (Single) DKIM-Signature = result (Single)
+pub use dkim::DkimSignature;
 
 //--------------------------------------------------------
 // Parsing implementations with type conversions
@@ -32,15 +44,18 @@ use dkim::DkimSignature;
 mod parser;
 
 //--------------------------------------------------------
-// Public API non-type based
+// Public API non-type conversion based
 //--------------------------------------------------------
 
+/// Allocating type for parsed all Authentication-Results in email
 #[cfg(any(feature = "alloc", feature = "std"))]
 #[derive(Debug, Default)]
 pub struct MessageAuthStatus<'hdr> {
+    /// Authentication-Results
     auth_results: Vec<AuthenticationResults<'hdr>>,
 }
 
+/// TODO: Fix errors
 #[derive(Debug, PartialEq)]
 pub enum MessageAuthStatusError {}
 
@@ -56,20 +71,22 @@ impl<'hdr> MessageAuthStatus<'hdr> {
 
         new_self.auth_results = msg
             .header_values("Authentication-Results")
-            .into_iter()
-            .map(|mh| mh.try_into().unwrap())
+            .map(|mh| mh.into())
             .collect();
 
         Ok(new_self)
     }
 }
 
+/// TODO: Errors
 #[derive(Debug, PartialEq)]
 pub enum DkimSignaturesError {}
 
+/// Allocating parsed results for DKIM-Signatures
 #[cfg(any(feature = "alloc", feature = "std"))]
 #[derive(Debug, Default)]
 pub struct DkimSignatures<'hdr> {
+    /// DKIM-Signature results
     dkim_signatures: Vec<DkimSignature<'hdr>>,
 }
 
@@ -85,7 +102,6 @@ impl<'hdr> DkimSignatures<'hdr> {
 
         new_self.dkim_signatures = msg
             .header_values("DKIM-Signature")
-            .into_iter()
             .map(|mh| mh.try_into().unwrap())
             .collect();
 

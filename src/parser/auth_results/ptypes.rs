@@ -1,25 +1,13 @@
 //! Property types Parser
 
-//use crate::dkim::DkimProperty;
-
-/*
-use crate::auth::AuthProperty;
-use crate::dmarc::DmarcProperty;
-use crate;:iprev::IpRevProperty;
-use crate::spf::SpfProperty;
-*/
-
-// Parse into this public type
-use crate::Prop;
-
-use super::ResultCodeError;
+use super::ParseCurrentResultChoice;
 use super::{parse_comment, CommentToken};
 use super::{parse_reason, ReasonToken};
-use super::{ParseCurrentResultChoice, ParseCurrentResultCode};
 use logos::{Lexer, Logos};
 
-//mod policy;
-//mod dmarc;
+use crate::error::AuthResultsError;
+
+// mod dmarc
 
 //------------------------------------------------------------------------
 // SMTP Auth ptypes
@@ -149,22 +137,16 @@ pub enum PtypeToken<'hdr> {
     #[token("reason", priority = 5)]
     Reason,
 
-    #[regex(r"\s+", |lex| lex.slice(), priority = 6)]
-    WhiteSpaces(&'hdr str),
+    #[regex(r"[\s\r\n\t]+", |lex| lex.slice(), priority = 6)]
+    Whs(&'hdr str),
 }
 
 #[derive(Debug, PartialEq)]
 enum PtypeStage {
     WantPtype,
-    GotPtype,
     WantDot,
-    WantPropertyKey,
-    GotPropertyKey,
     WantReasonEq,
     WantEq,
-    GotEq,
-    WantPropertyVal,
-    GotPropertyVal,
 }
 
 impl PtypeStage {
@@ -178,28 +160,22 @@ impl PtypeStage {
 pub fn parse_ptype_properties<'hdr>(
     lexer: &mut Lexer<'hdr, PtypeToken<'hdr>>,
     cur_res: &mut Option<ParseCurrentResultChoice<'hdr>>,
-) -> Result<usize, ResultCodeError> {
+) -> Result<usize, AuthResultsError> {
     let mut stage = PtypeStage::WantPtype;
     let mut cur_ptype: PtypeChoice = PtypeChoice::Nothing;
     let mut cur_property: PropTypeKey<'hdr> = PropTypeKey::Nothing;
 
-    let mut parsed_start = lexer.span().start;
     let mut parsed_end = lexer.span().start;
     let mut parsed_modifier = 0;
 
     let mut props_started = false;
-
-    let mut cur_res_choice = match &cur_res {
-        Some(choice) => choice,
-        None => return Err(ResultCodeError::ParsePtypeNoMethodResult),
-    };
 
     while let Some(token) = lexer.next() {
         match token {
             Ok(PtypeToken::CommentStart) => {
                 props_started = true;
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
-                let comment = match parse_comment(&mut comment_lexer) {
+                let _comment = match parse_comment(&mut comment_lexer) {
                     Ok(comment) => comment,
                     Err(e) => return Err(e),
                 };
@@ -215,7 +191,7 @@ pub fn parse_ptype_properties<'hdr>(
 
                 match cur_ptype_try {
                     PtypeChoice::Nothing => {
-                        return Err(ResultCodeError::ParsePtypeBugInvalidProperty)
+                        return Err(AuthResultsError::ParsePtypeBugInvalidProperty)
                     }
                     _ => {
                         cur_ptype = cur_ptype_try;
@@ -282,7 +258,7 @@ pub fn parse_ptype_properties<'hdr>(
                         lexer.bump(property_key_lexer.span().end);
                         PropTypeKey::AuthSmtp(property_key)
                     }
-                    _ => return Err(ResultCodeError::PropertiesNotImplemented),
+                    _ => return Err(AuthResultsError::PropertiesNotImplemented),
                 };
                 stage = PtypeStage::WantEq;
             }
@@ -293,10 +269,7 @@ pub fn parse_ptype_properties<'hdr>(
                 }
                 break;
             }
-            Ok(PtypeToken::WhiteSpaces(ref wsh)) if stage.should_ignore_whitespace() => {
-                if props_started == false {
-                    parsed_start = lexer.span().end;
-                }
+            Ok(PtypeToken::Whs(_)) if stage.should_ignore_whitespace() => {
                 // cont
             }
             Ok(PtypeToken::Reason) if stage == PtypeStage::WantPtype => {
@@ -418,7 +391,7 @@ pub fn parse_ptype_properties<'hdr>(
                         }
                     }
                     _ => {
-                        return Err(ResultCodeError::PropertyValuesNotImplemented);
+                        return Err(AuthResultsError::PropertyValuesNotImplemented);
                     }
                 };
             }
@@ -452,24 +425,24 @@ mod test {
     use insta::assert_debug_snapshot;
     use rstest::rstest;
 
+    use crate::parser::auth_results::ParseCurrentResultCode;
     use crate::spf::*;
 
-    fn prep_spf<'hdr>(s: &'hdr str) -> ParseCurrentResultCode<'hdr> {
+    fn prep_spf<'hdr>() -> ParseCurrentResultCode<'hdr> {
         let mut current = ParseCurrentResultCode::default();
-        let mut spf_result = SpfResult::default();
+        let spf_result = SpfResult::default();
         current.result = Some(ParseCurrentResultChoice::Spf(spf_result));
         current
     }
 
     #[rstest]
-    #[case("smtp.mailfrom=example.net", 1)]
-    fn spf(#[case] prop_str: &str, #[case] expected_count: usize) {
-        let mut cur_spf = prep_spf(prop_str);
+    #[case("smtp.mailfrom=example.net")]
+    fn spf(#[case] prop_str: &str) {
+        let mut cur_spf = prep_spf();
         let mut lexer = PtypeToken::lexer(prop_str);
 
-        let res = parse_ptype_properties(&mut lexer, &mut cur_spf.result).unwrap();
+        let _res = parse_ptype_properties(&mut lexer, &mut cur_spf.result).unwrap();
 
         assert_debug_snapshot!(cur_spf);
-        //assert_eq!(expected_count, res.properties.len());
     }
 }

@@ -1,3 +1,6 @@
+//! DKIM Version
+
+/// DKIM Version
 #[derive(Clone, Debug, PartialEq)]
 pub enum DkimVersion<'hdr> {
     /// RFC just says this should be used
@@ -6,6 +9,7 @@ pub enum DkimVersion<'hdr> {
     Unknown(&'hdr str),
 }
 
+/// Currently infallible, may change in the future
 #[derive(Debug, PartialEq)]
 pub enum DkimVersionError {}
 

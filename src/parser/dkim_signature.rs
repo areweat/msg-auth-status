@@ -122,7 +122,6 @@ impl<'hdr> DkimTagChoice<'hdr> {
 enum Stage<'hdr> {
     WantTag,
     WantEq(DkimTagChoice<'hdr>),
-    WantVal(DkimTagChoice<'hdr>),
 }
 
 // Intermediary Parsed structure to final DkimSignature
@@ -274,13 +273,9 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for DkimSignature<'hdr> {
                                     Ok(DkimFieldValueToken::FieldSep) => {
                                         break;
                                     }
-                                    // TODO: Re-work errors
-                                    Err(e_value) => {
-                                        return Err(DkimSignatureError::ParseValueUnmatch)
-                                    }
+                                    Err(_) => return Err(DkimSignatureError::ParseValueUnmatch),
                                 }
                             }
-                            //panic!("RAW: {:?} - Stage {:?} - Parse value = found_value / {:?}", text, stage, found_value);
                             tag_lexer = value_lexer.morph();
                             Stage::WantTag
                         }

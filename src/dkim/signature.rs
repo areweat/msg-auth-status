@@ -1,3 +1,5 @@
+//! DKIM Signatures
+
 use crate::dkim::*;
 
 /// RFC 6376 s. 3.5
@@ -33,8 +35,10 @@ pub struct DkimSignature<'hdr> {
     pub z: Option<&'hdr str>,
 }
 
+/// DKIM-Signature header parsing Errors
 #[derive(Debug)]
 pub enum DkimSignatureError {
+    /// No tags found at all
     NoTagFound,
     /// Encountered unexpected Equal '=' character when a tag was expected
     UnexpectedEqual,
@@ -58,13 +62,18 @@ pub enum DkimSignatureError {
     MissingSelector,
 }
 
+/// DKIM Header tags values parsing error
 #[derive(Debug, PartialEq)]
 pub enum DkimTagValueError {
     /// Tag value must appear only once per tag
     Duplicate,
+    /// DKIM Timestamp parsing error
     Timestamp(DkimTimestampError),
+    /// DKIM Canonizalition parsing error
     Canonicalization(DkimCanonicalizationError),
+    /// DKIM Algorithm parsing error
     Algorithm(DkimAlgorithmError),
+    /// DKIM Version parsing error
     Version(DkimVersionError),
 }
 

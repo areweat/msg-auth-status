@@ -1,10 +1,8 @@
 //! Parsing dkim property values
 
 use crate::dkim::ptypes::DkimPolicy;
-use crate::dkim::DkimHeader;
 use crate::dkim::*;
-
-use super::ResultCodeError;
+use crate::error::AuthResultsError;
 
 use super::DkimHeaderPropertyKey;
 use super::DkimPolicyPropertyKey;
@@ -21,11 +19,11 @@ pub enum DkimHeaderPropertyValueToken<'hdr> {
     #[token("(", priority = 1)]
     CommentStart,
 
-    #[regex(r#"[^\s;]+"#, |lex| lex.slice(), priority = 2)]
+    #[regex(r#"[^(\s\r\n\t;]+"#, |lex| lex.slice(), priority = 2)]
     MaybeValue(&'hdr str),
 
-    #[regex(r"\s+", |lex| lex.slice(), priority = 3)]
-    WhiteSpaces(&'hdr str),
+    #[regex(r"[\s\r\n\t]+", |lex| lex.slice(), priority = 3)]
+    Whs(&'hdr str),
 }
 
 impl<'hdr> DkimHeader<'hdr> {
@@ -52,27 +50,25 @@ impl<'hdr> DkimHeader<'hdr> {
 pub fn parse_dkim_header_property_value<'hdr>(
     lexer: &mut Lexer<'hdr, DkimHeaderPropertyValueToken<'hdr>>,
     property_key: &DkimHeaderPropertyKey,
-) -> Result<DkimHeader<'hdr>, ResultCodeError> {
-    let mut value_captured = false;
+) -> Result<DkimHeader<'hdr>, AuthResultsError> {
     let mut cur_res: Option<DkimHeader<'hdr>> = None;
 
     while let Some(token) = lexer.next() {
         match token {
-            Ok(DkimHeaderPropertyValueToken::MaybeValue(val)) if value_captured == false => {
+            Ok(DkimHeaderPropertyValueToken::MaybeValue(val)) => {
                 cur_res = Some(DkimHeader::from_parsed(property_key, val));
-                value_captured = true;
                 break;
             }
             Ok(DkimHeaderPropertyValueToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
+                    Ok(_comment) => {}
                     Err(e) => return Err(e),
                 }
                 lexer.bump(comment_lexer.span().end);
                 //*lexer = X::lexer(comment_lexer.remainder());
             }
-            Ok(DkimHeaderPropertyValueToken::WhiteSpaces(_)) => {
+            Ok(DkimHeaderPropertyValueToken::Whs(_)) => {
                 // cont
             }
             _ => {
@@ -95,7 +91,7 @@ pub fn parse_dkim_header_property_value<'hdr>(
         return Ok(value);
     }
 
-    Err(ResultCodeError::RunAwayDkimPropertyKey)
+    Err(AuthResultsError::RunAwayDkimPropertyKey)
 }
 
 //---------------------------------------
@@ -128,20 +124,18 @@ impl<'hdr> DkimPolicy<'hdr> {
 pub fn parse_dkim_policy_property_value<'hdr>(
     lexer: &mut Lexer<'hdr, DkimPolicyPropertyValueToken<'hdr>>,
     property_key: &DkimPolicyPropertyKey<'hdr>,
-) -> Result<DkimPolicy<'hdr>, ResultCodeError> {
-    let mut value_captured = false;
+) -> Result<DkimPolicy<'hdr>, AuthResultsError> {
     let mut cur_res: Option<DkimPolicy<'hdr>> = None;
 
     while let Some(token) = lexer.next() {
         match token {
-            Ok(DkimPolicyPropertyValueToken::MaybeValue(val)) if value_captured == false => {
+            Ok(DkimPolicyPropertyValueToken::MaybeValue(val)) => {
                 cur_res = Some(DkimPolicy::from_parsed(property_key, val));
-                value_captured = true;
                 break;
             }
             Ok(DkimPolicyPropertyValueToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
-                let comment = match parse_comment(&mut comment_lexer) {
+                let _comment = match parse_comment(&mut comment_lexer) {
                     Ok(comment) => comment,
                     Err(e) => return Err(e),
                 };
@@ -170,5 +164,5 @@ pub fn parse_dkim_policy_property_value<'hdr>(
         return Ok(value);
     }
 
-    Err(ResultCodeError::RunAwayDkimPropertyKey)
+    Err(AuthResultsError::RunAwayDkimPropertyKey)
 }

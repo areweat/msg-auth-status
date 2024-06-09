@@ -1,9 +1,10 @@
 //! Hostname / IP Address parsing
 
+use super::Stage;
 use super::{parse_comment, CommentToken};
-use super::{ResultCodeError, Stage};
 
-use crate::HostVersion;
+use crate::auth_results::HostVersion;
+use crate::error::AuthResultsError;
 
 use logos::{Lexer, Logos};
 
@@ -36,7 +37,7 @@ pub enum HostVersionToken<'hdr> {
 
 pub fn parse_host_version<'hdr>(
     lexer: &mut Lexer<'hdr, HostVersionToken<'hdr>>,
-) -> Result<HostVersion<'hdr>, ResultCodeError> {
+) -> Result<HostVersion<'hdr>, AuthResultsError> {
     let mut maybe_host: Option<&'hdr str> = None;
     let mut maybe_version: Option<u32> = None;
 
@@ -53,7 +54,7 @@ pub fn parse_host_version<'hdr>(
                     maybe_host = Some(host);
                     stage = Stage::SawHost;
                 } else {
-                    return Err(ResultCodeError::ParseHost(
+                    return Err(AuthResultsError::ParseHost(
                         "Hostname appearing twice?".to_string(),
                     ));
                 }
@@ -67,7 +68,7 @@ pub fn parse_host_version<'hdr>(
             Ok(HostVersionToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
+                    Ok(_comment) => {}
                     Err(e) => return Err(e),
                 }
                 *lexer = HostVersionToken::lexer(comment_lexer.remainder());
@@ -86,6 +87,6 @@ pub fn parse_host_version<'hdr>(
             host,
             version: maybe_version,
         }),
-        None => Err(ResultCodeError::NoHostname),
+        None => Err(AuthResultsError::NoHostname),
     }
 }

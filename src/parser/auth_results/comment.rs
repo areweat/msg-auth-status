@@ -1,4 +1,4 @@
-use super::ResultCodeError;
+use crate::error::AuthResultsError;
 
 use logos::{Lexer, Logos};
 
@@ -13,7 +13,7 @@ pub enum CommentToken<'hdr> {
 
 pub fn parse_comment<'hdr>(
     lexer: &mut Lexer<'hdr, CommentToken<'hdr>>,
-) -> Result<Option<&'hdr str>, ResultCodeError> {
+) -> Result<Option<&'hdr str>, AuthResultsError> {
     let mut ret_comment: Option<&'hdr str> = None;
     while let Some(token) = lexer.next() {
         match token {
@@ -34,5 +34,5 @@ pub fn parse_comment<'hdr>(
             }
         }
     }
-    Err(ResultCodeError::RunAwayComment)
+    Err(AuthResultsError::RunAwayComment)
 }

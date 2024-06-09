@@ -1,4 +1,4 @@
-use super::ResultCodeError;
+use crate::error::AuthResultsError;
 
 use logos::{Lexer, Logos};
 
@@ -13,7 +13,7 @@ pub enum ReasonToken<'hdr> {
 
 pub fn parse_reason<'hdr>(
     lexer: &mut Lexer<'hdr, ReasonToken<'hdr>>,
-) -> Result<&'hdr str, ResultCodeError> {
+) -> Result<&'hdr str, AuthResultsError> {
     let mut res_reason: Option<&'hdr str> = None;
 
     let mut started = false;
@@ -42,6 +42,6 @@ pub fn parse_reason<'hdr>(
 
     match res_reason {
         Some(v) => Ok(v),
-        None => Err(ResultCodeError::NoAssociatedReason),
+        None => Err(AuthResultsError::NoAssociatedReason),
     }
 }

@@ -1,7 +1,10 @@
+//! DKIM Canonicalization behaviour
+
+/// DKIM Canonicalization (per RFC)
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum DkimCanonicalization<'hdr> {
+    /// simple/simple & simple algorithm tolerates almost no modification    
     #[default]
-    /// simple/simple & simple algorithm tolerates almost no modification
     Simple,
     /// relaxed/simple & relaxed algorithm tolerates common modifications such
     /// as whitespace replacement and header field line rewrapping.
@@ -10,6 +13,7 @@ pub enum DkimCanonicalization<'hdr> {
     Unknown(&'hdr str),
 }
 
+/// Currently infallible may be changed in the future
 #[derive(Clone, Debug, PartialEq)]
 pub enum DkimCanonicalizationError {}
 

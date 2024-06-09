@@ -1,6 +1,6 @@
-use super::ResultCodeError;
 use super::{parse_comment, CommentToken};
 
+use crate::error::AuthResultsError;
 use logos::{Lexer, Logos};
 
 #[derive(Debug, Logos)]
@@ -18,7 +18,7 @@ pub enum VersionToken<'hdr> {
 
 pub fn parse_version<'hdr>(
     lexer: &mut Lexer<'hdr, VersionToken<'hdr>>,
-) -> Result<u32, ResultCodeError> {
+) -> Result<u32, AuthResultsError> {
     let mut res_version: Option<u32> = None;
 
     while let Some(token) = lexer.next() {
@@ -26,17 +26,15 @@ pub fn parse_version<'hdr>(
             Ok(VersionToken::MaybeVersion(version_str)) => {
                 let version_u32: u32 = version_str
                     .parse()
-                    .map_err(|_| ResultCodeError::InvalidVersion)?;
+                    .map_err(|_| AuthResultsError::InvalidVersion)?;
                 res_version = Some(version_u32);
             }
             Ok(VersionToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
-                //let mut comment_lexer: Lexer<'hdr, CommentToken<'hdr>> = lexer.morph();
                 match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
+                    Ok(_comment) => {}
                     Err(e) => return Err(e),
                 }
-                //*lexer = comment_lexer.morph();
                 *lexer = VersionToken::lexer(comment_lexer.remainder());
             }
             Ok(VersionToken::Equal) => {
@@ -54,6 +52,6 @@ pub fn parse_version<'hdr>(
     }
     match res_version {
         Some(v) => Ok(v),
-        None => Err(ResultCodeError::NoAssociatedVersion),
+        None => Err(AuthResultsError::NoAssociatedVersion),
     }
 }

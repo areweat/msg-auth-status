@@ -1,6 +1,8 @@
+//! DKIM header.* or header tags per RFC 6376
+
 use super::*;
 
-/// See RFC 6376 s. 3.5
+/// See RFC 6376 s. 3.5 for the full definitions
 #[derive(Clone, Debug, PartialEq)]
 pub enum DkimHeader<'hdr> {
     /// Required - Version
@@ -42,9 +44,10 @@ pub enum DkimHeader<'hdr> {
     R(&'hdr str),
     /// RFC 5322
     Rfc5322From(&'hdr str),
-    // Unknown
+    /// Unknown
     Unknown(&'hdr str, &'hdr str),
 }
 
+/// Currently no errors - may change in the future
 #[derive(Clone, Debug, PartialEq)]
 pub enum DkimHeaderError {}

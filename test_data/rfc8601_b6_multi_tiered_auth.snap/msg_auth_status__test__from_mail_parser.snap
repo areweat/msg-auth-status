@@ -53,6 +53,7 @@ Ok(
                 raw: Some(
                     "example.com;\n      dkim=pass reason=\"good signature\"\n        header.i=@mail-router.example.net;\n      dkim=fail reason=\"bad signature\"\n        header.i=@newyork.example.com",
                 ),
+                error: None,
             },
             AuthenticationResults {
                 host: Some(
@@ -84,6 +85,7 @@ Ok(
                 raw: Some(
                     "example.net;\n      dkim=pass (good signature) header.i=@newyork.example.com",
                 ),
+                error: None,
             },
         ],
     },

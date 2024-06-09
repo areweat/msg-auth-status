@@ -6,8 +6,6 @@ edition = "2021"
 [dependencies]
 mail-parser = { version = "0.9", default-features = false, optional = true }
 logos = { version = "0.14", default-features = false, features = ["export_derive"] }
-strum = { version = "0.26", default-features = false }
-strum_macros = { version = "0.26", default-features = false }
 
 [dev-dependencies]
 insta = { version = "1.38" }

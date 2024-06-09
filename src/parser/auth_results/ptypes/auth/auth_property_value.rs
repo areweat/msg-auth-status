@@ -1,9 +1,7 @@
 //! Parsing auth property values
 
 use crate::auth::ptypes::AuthSmtp;
-use crate::auth::*;
-
-use super::ResultCodeError;
+use crate::error::AuthResultsError;
 
 use super::AuthSmtpPropertyKey;
 use super::{parse_comment, CommentToken};
@@ -15,10 +13,11 @@ pub enum AuthSmtpPropertyValueToken<'hdr> {
     #[token("(", priority = 1)]
     CommentStart,
 
-    #[regex(r#"[^\s;]+"#, |lex| lex.slice(), priority = 2)]
+    #[regex(r#"[^(\s\r\n\t;]+"#, |lex| lex.slice(), priority = 2)]
     MaybeValue(&'hdr str),
 
-    Dummy(&'hdr str),
+    #[regex(r"[\s\r\n\t]+", |lex| lex.slice(), priority = 3)]
+    Whs(&'hdr str),
 }
 
 impl<'hdr> AuthSmtp<'hdr> {
@@ -33,16 +32,25 @@ impl<'hdr> AuthSmtp<'hdr> {
 pub fn parse_auth_smtp_property_value<'hdr>(
     lexer: &mut Lexer<'hdr, AuthSmtpPropertyValueToken<'hdr>>,
     property_key: &AuthSmtpPropertyKey,
-) -> Result<AuthSmtp<'hdr>, ResultCodeError> {
-    let mut value_captured = false;
+) -> Result<AuthSmtp<'hdr>, AuthResultsError> {
     let mut cur_res: Option<AuthSmtp<'hdr>> = None;
 
     while let Some(token) = lexer.next() {
         match token {
-            Ok(AuthSmtpPropertyValueToken::MaybeValue(val)) if value_captured == false => {
+            Ok(AuthSmtpPropertyValueToken::MaybeValue(val)) => {
                 cur_res = Some(AuthSmtp::from_parsed(property_key, val));
-                value_captured = true;
                 break;
+            }
+            Ok(AuthSmtpPropertyValueToken::CommentStart) => {
+                let mut comment_lexer = CommentToken::lexer(lexer.remainder());
+                match parse_comment(&mut comment_lexer) {
+                    Ok(_comment) => {}
+                    Err(e) => return Err(e),
+                }
+                lexer.bump(comment_lexer.span().end);
+            }
+            Ok(AuthSmtpPropertyValueToken::Whs(_)) => {
+                // cont
             }
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
@@ -64,5 +72,5 @@ pub fn parse_auth_smtp_property_value<'hdr>(
         return Ok(value);
     }
 
-    Err(ResultCodeError::RunAwayAuthPropertyValue)
+    Err(AuthResultsError::RunAwayAuthPropertyValue)
 }

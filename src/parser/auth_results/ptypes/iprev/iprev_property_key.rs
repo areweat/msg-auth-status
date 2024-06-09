@@ -1,9 +1,6 @@
 //! Parsing iprev property types & values
-//! https://www.iana.org/assignments/email-auth/email-auth.xhtml
 
-use crate::iprev::*;
-
-use super::ResultCodeError;
+use crate::error::AuthResultsError;
 
 /// IANA Email Authentication Methods ptype / property Mapping stages
 #[derive(Debug, PartialEq)]
@@ -12,11 +9,11 @@ pub enum IpRevPolicyPropertyKey {
 }
 
 impl<'hdr> TryFrom<IpRevPolicyPropertyKeyToken<'hdr>> for IpRevPolicyPropertyKey {
-    type Error = ResultCodeError;
+    type Error = AuthResultsError;
     fn try_from(token: IpRevPolicyPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
             IpRevPolicyPropertyKeyToken::IpRev => Self::IpRev,
-            _ => return Err(ResultCodeError::ParsePtypeBugInvalidProperty),
+            _ => return Err(AuthResultsError::ParsePtypeBugInvalidProperty),
         };
         Ok(okk)
     }
@@ -24,7 +21,6 @@ impl<'hdr> TryFrom<IpRevPolicyPropertyKeyToken<'hdr>> for IpRevPolicyPropertyKey
 
 //----------
 // Parsing iprev property
-// https://www.iana.org/assignments/email-auth/email-auth.xhtml
 //----------
 
 use super::{parse_comment, CommentToken};
@@ -45,15 +41,15 @@ pub enum IpRevPolicyPropertyKeyToken<'hdr> {
 
 pub fn parse_iprev_policy_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, IpRevPolicyPropertyKeyToken<'hdr>>,
-) -> Result<IpRevPolicyPropertyKey, ResultCodeError> {
+) -> Result<IpRevPolicyPropertyKey, AuthResultsError> {
     while let Some(token) = lexer.next() {
         match token {
             Ok(IpRevPolicyPropertyKeyToken::IpRev) => {
-                let property = token.map_err(|_| ResultCodeError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<IpRevPolicyPropertyKey, ResultCodeError> =
+                let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
+                let mapped_property_res: Result<IpRevPolicyPropertyKey, AuthResultsError> =
                     property.try_into();
                 let mapped_property = mapped_property_res
-                    .map_err(|_| ResultCodeError::ParsePtypeBugInvalidProperty)?;
+                    .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
                 return Ok(mapped_property);
             }
             Ok(IpRevPolicyPropertyKeyToken::WhiteSpaces(_)) => {
@@ -62,11 +58,10 @@ pub fn parse_iprev_policy_property_key<'hdr>(
             Ok(IpRevPolicyPropertyKeyToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
+                    Ok(_comment) => {}
                     Err(e) => return Err(e),
                 }
                 lexer.bump(comment_lexer.span().end);
-                //*lexer = X::lexer(comment_lexer.remainder());
             }
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
@@ -83,5 +78,5 @@ pub fn parse_iprev_policy_property_key<'hdr>(
             }
         }
     }
-    Err(ResultCodeError::RunAwayIpRevPropertyKey)
+    Err(AuthResultsError::RunAwayIpRevPropertyKey)
 }

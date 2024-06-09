@@ -1,14 +1,23 @@
 //! Public DKIM types exported by this library
 
+/// Parsed dkim Result - see RFC 6376 for the header tags
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DkimResult<'hdr> {
+    /// dkim Result (per RFC)
     pub code: DkimResultCode,
+    /// Reason if supplied (per RFC)
     pub reason: Option<&'hdr str>,
+    /// header.d (per RFC)
     pub header_d: Option<&'hdr str>,
+    /// header.i (per RFC)
     pub header_i: Option<&'hdr str>,
+    /// header_b (per RFC)
     pub header_b: Option<&'hdr str>,
+    /// header.a (per RFC)
     pub header_a: Option<DkimAlgorithm<'hdr>>,
+    /// header.s (per RFC)
     pub header_s: Option<&'hdr str>,
+    /// Unparsed raw
     pub raw: Option<&'hdr str>,
 }
 
@@ -25,16 +34,15 @@ impl<'hdr> DkimResult<'hdr> {
         true
     }
     // TODO: Not supported
-    pub(crate) fn set_policy(&mut self, prop: &ptypes::DkimPolicy<'hdr>) -> bool {
+    pub(crate) fn set_policy(&mut self, _prop: &ptypes::DkimPolicy<'hdr>) -> bool {
         true
     }
 }
 
 /// DKIM Result Codes - s.2.7.1
-//#[derive(Debug, Default, EnumString, StrumDisplay)]
-//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum DkimResultCode {
+    /// Result code not seen
     #[default]
     Unknown,
     /// The message was not signed.

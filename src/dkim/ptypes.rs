@@ -1,7 +1,6 @@
 //! DKIM Property types or 'ptype' per RFC 8601 s. 2.7.1
 //!
 //! IANA Maintains the registry for all the possible Parameters
-//! https://www.iana.org/assignments/dkim-parameters/dkim-parameters.xhtml
 //!
 //! DKIM-Signature Tag Specifications are defined in RFC 6376 s. 7.2
 //!
@@ -9,12 +8,16 @@
 
 use super::*;
 
+/// DKIM ptypes
 #[derive(Clone, Debug, PartialEq)]
 pub enum DkimProperty<'hdr> {
+    /// header.* subset of RFC 6376 tags
     Header(DkimHeader<'hdr>),
+    /// policy.*
     Policy(DkimPolicy<'hdr>),
 }
 
+/// DKIM policy ptype properties
 #[derive(Clone, Debug, PartialEq)]
 pub enum DkimPolicy<'hdr> {
     /// Unknown

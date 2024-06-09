@@ -32,6 +32,7 @@ Ok(
                 raw: Some(
                     "example.com;\n          spf=pass smtp.mailfrom=example.net",
                 ),
+                error: None,
             },
         ],
     },

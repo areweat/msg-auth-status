@@ -1,8 +1,16 @@
+//! SMTP auth - typicaly client of MTA
+//! This is different from Authentication-Results header that may include this
+
+/// Parsed auth (per RFC)
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SmtpAuthResult<'hdr> {
+    /// Result
     pub code: SmtpAuthResultCode,
+    /// smtp.auth
     pub smtp_auth: Option<&'hdr str>,
+    /// smtp.mailfrom
     pub smtp_mailfrom: Option<&'hdr str>,
+    /// Unparsed raw
     pub raw: Option<&'hdr str>,
 }
 
@@ -11,7 +19,6 @@ impl<'hdr> SmtpAuthResult<'hdr> {
         match prop {
             ptypes::AuthSmtp::MailFrom(val) => self.smtp_mailfrom = Some(val),
             ptypes::AuthSmtp::Auth(val) => self.smtp_auth = Some(val),
-            _ => {}
         }
         true
     }
@@ -19,10 +26,9 @@ impl<'hdr> SmtpAuthResult<'hdr> {
 
 /// SMTP AUTH Result Codes - s.2.7.4
 /// This SMTP Authentication (not DKIM)
-//#[derive(Debug, Default, EnumString, StrumDisplay)]
-//#[strum(serialize_all = "lowercase", ascii_case_insensitive)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum SmtpAuthResultCode {
+    /// Result not seen
     #[default]
     Unknown,
     /// SMTP authentication was not attempted.

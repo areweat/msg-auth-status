@@ -1,9 +1,6 @@
 //! Parsing auth property types & values
-//! https://www.iana.org/assignments/email-auth/email-auth.xhtml
 
-use crate::auth::*;
-
-use super::ResultCodeError;
+use crate::error::AuthResultsError;
 
 /// IANA Email Authentication Methods ptype / property Mapping stages
 #[derive(Debug, PartialEq)]
@@ -13,12 +10,12 @@ pub enum AuthSmtpPropertyKey {
 }
 
 impl<'hdr> TryFrom<AuthSmtpPropertyKeyToken<'hdr>> for AuthSmtpPropertyKey {
-    type Error = ResultCodeError;
+    type Error = AuthResultsError;
     fn try_from(token: AuthSmtpPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
             AuthSmtpPropertyKeyToken::MailFrom => Self::MailFrom,
             AuthSmtpPropertyKeyToken::Auth => Self::Auth,
-            _ => return Err(ResultCodeError::ParsePtypeBugInvalidProperty),
+            _ => return Err(AuthResultsError::ParsePtypeBugInvalidProperty),
         };
         Ok(okk)
     }
@@ -26,7 +23,6 @@ impl<'hdr> TryFrom<AuthSmtpPropertyKeyToken<'hdr>> for AuthSmtpPropertyKey {
 
 //----------
 // Parsing auth property
-// https://www.iana.org/assignments/email-auth/email-auth.xhtml
 //----------
 
 use super::{parse_comment, CommentToken};
@@ -50,15 +46,15 @@ pub enum AuthSmtpPropertyKeyToken<'hdr> {
 
 pub fn parse_auth_smtp_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, AuthSmtpPropertyKeyToken<'hdr>>,
-) -> Result<AuthSmtpPropertyKey, ResultCodeError> {
+) -> Result<AuthSmtpPropertyKey, AuthResultsError> {
     while let Some(token) = lexer.next() {
         match token {
             Ok(AuthSmtpPropertyKeyToken::MailFrom | AuthSmtpPropertyKeyToken::Auth) => {
-                let property = token.map_err(|_| ResultCodeError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<AuthSmtpPropertyKey, ResultCodeError> =
+                let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
+                let mapped_property_res: Result<AuthSmtpPropertyKey, AuthResultsError> =
                     property.try_into();
                 let mapped_property = mapped_property_res
-                    .map_err(|_| ResultCodeError::ParsePtypeBugInvalidProperty)?;
+                    .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
                 return Ok(mapped_property);
             }
             Ok(AuthSmtpPropertyKeyToken::WhiteSpaces(_)) => {
@@ -67,11 +63,10 @@ pub fn parse_auth_smtp_property_key<'hdr>(
             Ok(AuthSmtpPropertyKeyToken::CommentStart) => {
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
-                    Ok(comment) => {}
+                    Ok(_comment) => {}
                     Err(e) => return Err(e),
                 }
                 lexer.bump(comment_lexer.span().end);
-                //*lexer = X::lexer(comment_lexer.remainder());
             }
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
@@ -88,5 +83,5 @@ pub fn parse_auth_smtp_property_key<'hdr>(
             }
         }
     }
-    Err(ResultCodeError::RunAwayAuthPropertyKey)
+    Err(AuthResultsError::RunAwayAuthPropertyKey)
 }

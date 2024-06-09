@@ -1,12 +1,10 @@
 //! Parsing iprev property values
 
-use crate::iprev::ptypes::IpRevPolicy;
-use crate::iprev::*;
-
-use super::ResultCodeError;
-
 use super::IpRevPolicyPropertyKey;
 use super::{parse_comment, CommentToken};
+
+use crate::error::AuthResultsError;
+use crate::iprev::ptypes::IpRevPolicy;
 
 use logos::{Lexer, Logos};
 
@@ -15,10 +13,11 @@ pub enum IpRevPolicyPropertyValueToken<'hdr> {
     #[token("(", priority = 1)]
     CommentStart,
 
-    #[regex(r#"[^\s;]+"#, |lex| lex.slice(), priority = 2)]
+    #[regex(r#"[^(\s\r\n\t;]+"#, |lex| lex.slice(), priority = 2)]
     MaybeValue(&'hdr str),
 
-    Dummy(&'hdr str),
+    #[regex(r"[\s\r\n\t]+", |lex| lex.slice(), priority = 3)]
+    Whs(&'hdr str),
 }
 
 impl<'hdr> IpRevPolicy<'hdr> {
@@ -32,16 +31,25 @@ impl<'hdr> IpRevPolicy<'hdr> {
 pub fn parse_iprev_policy_property_value<'hdr>(
     lexer: &mut Lexer<'hdr, IpRevPolicyPropertyValueToken<'hdr>>,
     property_key: &IpRevPolicyPropertyKey,
-) -> Result<IpRevPolicy<'hdr>, ResultCodeError> {
-    let mut value_captured = false;
+) -> Result<IpRevPolicy<'hdr>, AuthResultsError> {
     let mut cur_res: Option<IpRevPolicy<'hdr>> = None;
 
     while let Some(token) = lexer.next() {
         match token {
-            Ok(IpRevPolicyPropertyValueToken::MaybeValue(val)) if value_captured == false => {
+            Ok(IpRevPolicyPropertyValueToken::MaybeValue(val)) => {
                 cur_res = Some(IpRevPolicy::from_parsed(property_key, val));
-                value_captured = true;
                 break;
+            }
+            Ok(IpRevPolicyPropertyValueToken::CommentStart) => {
+                let mut comment_lexer = CommentToken::lexer(lexer.remainder());
+                match parse_comment(&mut comment_lexer) {
+                    Ok(_comment) => {}
+                    Err(e) => return Err(e),
+                }
+                lexer.bump(comment_lexer.span().end);
+            }
+            Ok(IpRevPolicyPropertyValueToken::Whs(_)) => {
+                // cont
             }
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
@@ -63,5 +71,19 @@ pub fn parse_iprev_policy_property_value<'hdr>(
         return Ok(value);
     }
 
-    Err(ResultCodeError::RunAwayIpRevPropertyValue)
+    Err(AuthResultsError::RunAwayIpRevPropertyValue)
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn test_comment() {
+        let mut lexer = IpRevPolicyPropertyValueToken::lexer("(foobar) value.foo");
+        let res = parse_iprev_policy_property_value(&mut lexer, &IpRevPolicyPropertyKey::IpRev);
+
+        assert_eq!(res, Ok(IpRevPolicy::IpRev("value.foo")));
+    }
 }
