@@ -1,5 +1,4 @@
-//! SMTP auth - typicaly client of MTA
-//! This is different from Authentication-Results header that may include this
+//! Method auth Result
 
 /// Parsed auth (per RFC)
 #[derive(Clone, Debug, Default, PartialEq)]

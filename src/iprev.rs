@@ -1,6 +1,4 @@
-//! iprev method result
-//! iprev" is an attempt to verify that a client appears to
-//! be valid based on some DNS queries.
+//! Method iprev Result
 
 /// Parsed iprev=..
 #[derive(Clone, Debug, Default, PartialEq)]

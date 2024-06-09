@@ -1,4 +1,4 @@
-//! Public DKIM types exported by this library
+//! Method dkim Result and associated types
 
 /// Parsed dkim Result - see RFC 6376 for the header tags
 #[derive(Clone, Debug, Default, PartialEq)]

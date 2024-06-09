@@ -1,4 +1,4 @@
-//! SPF Types
+//! Method spf Result
 
 /// Parsed SPF Result
 #[derive(Clone, Debug, Default, PartialEq)]
