@@ -251,9 +251,12 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for DkimSignature<'hdr> {
     type Error = DkimSignatureError;
 
     fn try_from(hval: &'hdr HeaderValue<'hdr>) -> Result<Self, Self::Error> {
-        let text = hval.as_text().unwrap();
+        let text = match hval.as_text() {
+            None => return Err(DkimSignatureError::NoTagFound),
+            Some(text) => text,
+        };
 
-        let mut tag_lexer = DkimFieldKeyToken::lexer(&text);
+        let mut tag_lexer = DkimFieldKeyToken::lexer(text);
         let mut stage = Stage::WantTag;
         let mut res = ParsedDkimSignature::default();
 
@@ -265,7 +268,7 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for DkimSignature<'hdr> {
                             let mut value_lexer: Lexer<'hdr, DkimFieldValueToken<'hdr>> =
                                 tag_lexer.morph();
 
-                            while let Some(value_token) = value_lexer.next() {
+                            for value_token in value_lexer.by_ref() {
                                 match value_token {
                                     Ok(DkimFieldValueToken::MaybeValue(value)) => {
                                         res.add_tag_value(key_tag.clone(), value)?;

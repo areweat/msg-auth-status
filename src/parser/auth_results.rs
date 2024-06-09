@@ -166,23 +166,20 @@ enum Stage {
 impl Stage {
     // Is the current stage expecting resultset status
     fn is_cur_expect_resultset_want(&self) -> bool {
-        match self {
+        matches!(
+            self,
             Self::WantAuthResult
-            | Self::WantSpfResult
-            | Self::WantDkimResult
-            | Self::WantIpRevResult => true,
-            _ => false,
-        }
+                | Self::WantSpfResult
+                | Self::WantDkimResult
+                | Self::WantIpRevResult
+        )
     }
     // Is the current stage expecting '=' equal for a result set
     fn is_cur_expect_resultset_equal(&self) -> bool {
-        match self {
-            Self::WantAuthEqual
-            | Self::WantSpfEqual
-            | Self::WantDkimEqual
-            | Self::WantIpRevEqual => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Self::WantAuthEqual | Self::WantSpfEqual | Self::WantDkimEqual | Self::WantIpRevEqual
+        )
     }
     // Reflect the relevant Result for given WantEqual
     fn equal_to_result(&mut self) -> bool {
@@ -208,11 +205,8 @@ enum ParseCurrentResultChoice<'hdr> {
 
 impl<'hdr> ParseCurrentResultChoice<'hdr> {
     fn set_reason(&mut self, reason: &'hdr str) {
-        match self {
-            ParseCurrentResultChoice::Dkim(ref mut dkim_res) => {
-                dkim_res.reason = Some(reason);
-            }
-            _ => {}
+        if let ParseCurrentResultChoice::Dkim(ref mut dkim_res) = self {
+            dkim_res.reason = Some(reason);
         }
     }
 }
@@ -220,7 +214,6 @@ impl<'hdr> ParseCurrentResultChoice<'hdr> {
 #[derive(Clone, Debug, Default)]
 struct ParseCurrentResultCode<'hdr> {
     result: Option<ParseCurrentResultChoice<'hdr>>,
-    raw: Option<&'hdr str>,
 }
 
 fn assign_result_code<'hdr>(
@@ -232,33 +225,41 @@ fn assign_result_code<'hdr>(
 
     match stage {
         Stage::WantAuthResult => {
-            let result_code = SmtpAuthResultCode::try_from(token).map_err(|e| e)?;
-            let mut smtp_auth_result = SmtpAuthResult::default();
-            smtp_auth_result.code = result_code;
+            let code = SmtpAuthResultCode::try_from(token)?;
+            let smtp_auth_result = SmtpAuthResult {
+                code,
+                ..Default::default()
+            };
             new_res.result = Some(ParseCurrentResultChoice::SmtpAuth(smtp_auth_result));
             *cur_res = new_res;
             Ok(())
         }
         Stage::WantSpfResult => {
-            let result_code = SpfResultCode::try_from(token).map_err(|e| e)?;
-            let mut spf_result = SpfResult::default();
-            spf_result.code = result_code;
+            let code = SpfResultCode::try_from(token)?;
+            let spf_result = SpfResult {
+                code,
+                ..Default::default()
+            };
             new_res.result = Some(ParseCurrentResultChoice::Spf(spf_result));
             *cur_res = new_res;
             Ok(())
         }
         Stage::WantDkimResult => {
-            let result_code = DkimResultCode::try_from(token).map_err(|e| e)?;
-            let mut dkim_result = DkimResult::default();
-            dkim_result.code = result_code;
+            let code = DkimResultCode::try_from(token)?;
+            let dkim_result = DkimResult {
+                code,
+                ..Default::default()
+            };
             new_res.result = Some(ParseCurrentResultChoice::Dkim(dkim_result));
             *cur_res = new_res;
             Ok(())
         }
         Stage::WantIpRevResult => {
-            let result_code = IpRevResultCode::try_from(token).map_err(|e| e)?;
-            let mut iprev_result = IpRevResult::default();
-            iprev_result.code = result_code;
+            let code = IpRevResultCode::try_from(token)?;
+            let iprev_result = IpRevResult {
+                code,
+                ..Default::default()
+            };
             new_res.result = Some(ParseCurrentResultChoice::IpRev(iprev_result));
             *cur_res = new_res;
             Ok(())
@@ -268,15 +269,21 @@ fn assign_result_code<'hdr>(
 }
 
 impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
-    //type Error = AuthResultsError;
-
     fn from(hval: &'hdr HeaderValue<'hdr>) -> Self {
-        let text = hval.as_text().unwrap();
+        let mut res = Self {
+            raw: hval.as_text(),
+            ..Default::default()
+        };
 
-        let mut res = Self::default();
-        res.raw = Some(text);
+        let text = match hval.as_text() {
+            None => {
+                res.error = Some(AuthResultsError::NoHeader);
+                return res;
+            }
+            Some(text) => text,
+        };
 
-        let mut host_lexer = HostVersionToken::lexer(&text);
+        let mut host_lexer = HostVersionToken::lexer(text);
 
         let host = match parse_host_version(&mut host_lexer) {
             Ok(host) => host,
@@ -291,7 +298,6 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
 
         let mut stage = Stage::WantIdentifier;
         let mut cur_res = ParseCurrentResultCode::default();
-        cur_res.raw = Some(text);
 
         let mut raw_part_start = 0;
 
@@ -339,16 +345,13 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     | AuthResultToken::NoneNone
                     | AuthResultToken::Neutral,
                 ) if stage.is_cur_expect_resultset_want() => {
-                    match assign_result_code(
+                    if let Err(e) = assign_result_code(
                         token.expect("BUG: Matched err?!"),
                         stage.clone(),
                         &mut cur_res,
                     ) {
-                        Err(e) => {
-                            res.error = Some(e);
-                            break;
-                        }
-                        Ok(()) => {}
+                        res.error = Some(e);
+                        break;
                     }
 
                     let lexer_end = lexer.span().end;

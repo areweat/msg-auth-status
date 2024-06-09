@@ -5,6 +5,7 @@
     unused_lifetimes,
     unused_qualifications
 )]
+#![allow(clippy::single_match)]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 #![doc = include_str!("../README.md")]
 

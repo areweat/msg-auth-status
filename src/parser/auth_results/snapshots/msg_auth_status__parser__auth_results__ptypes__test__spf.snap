@@ -16,5 +16,4 @@ ParseCurrentResultCode {
             },
         ),
     ),
-    raw: None,
 }

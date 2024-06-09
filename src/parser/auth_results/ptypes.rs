@@ -142,18 +142,16 @@ pub enum PtypeToken<'hdr> {
 }
 
 #[derive(Debug, PartialEq)]
-enum PtypeStage {
-    WantPtype,
-    WantDot,
-    WantReasonEq,
-    WantEq,
+enum WantStage {
+    Ptype,
+    Dot,
+    ReasonEq,
+    Eq,
 }
 
-impl PtypeStage {
+impl WantStage {
     fn should_ignore_whitespace(&self) -> bool {
-        match self {
-            _ => true,
-        }
+        true
     }
 }
 
@@ -161,7 +159,7 @@ pub fn parse_ptype_properties<'hdr>(
     lexer: &mut Lexer<'hdr, PtypeToken<'hdr>>,
     cur_res: &mut Option<ParseCurrentResultChoice<'hdr>>,
 ) -> Result<usize, AuthResultsError> {
-    let mut stage = PtypeStage::WantPtype;
+    let mut stage = WantStage::Ptype;
     let mut cur_ptype: PtypeChoice = PtypeChoice::Nothing;
     let mut cur_property: PropTypeKey<'hdr> = PropTypeKey::Nothing;
 
@@ -182,7 +180,7 @@ pub fn parse_ptype_properties<'hdr>(
                 lexer.bump(comment_lexer.span().end);
             }
             Ok(PtypeToken::PtypeSmtp | PtypeToken::PtypeHeader | PtypeToken::PtypePolicy)
-                if stage == PtypeStage::WantPtype =>
+                if stage == WantStage::Ptype =>
             {
                 props_started = true;
                 let token_unwrap = token.expect("BUG: Incorrect gating.");
@@ -197,11 +195,9 @@ pub fn parse_ptype_properties<'hdr>(
                         cur_ptype = cur_ptype_try;
                     }
                 }
-                stage = PtypeStage::WantDot;
+                stage = WantStage::Dot;
             }
-            Ok(PtypeToken::Dot)
-                if stage == PtypeStage::WantDot && cur_ptype != PtypeChoice::Nothing =>
-            {
+            Ok(PtypeToken::Dot) if stage == WantStage::Dot && cur_ptype != PtypeChoice::Nothing => {
                 cur_property = match cur_ptype {
                     PtypeChoice::DkimHeader => {
                         let mut property_key_lexer =
@@ -260,11 +256,11 @@ pub fn parse_ptype_properties<'hdr>(
                     }
                     _ => return Err(AuthResultsError::PropertiesNotImplemented),
                 };
-                stage = PtypeStage::WantEq;
+                stage = WantStage::Eq;
             }
 
             Ok(PtypeToken::FieldSep) => {
-                if props_started == true {
+                if props_started {
                     parsed_modifier += 1;
                 }
                 break;
@@ -272,27 +268,24 @@ pub fn parse_ptype_properties<'hdr>(
             Ok(PtypeToken::Whs(_)) if stage.should_ignore_whitespace() => {
                 // cont
             }
-            Ok(PtypeToken::Reason) if stage == PtypeStage::WantPtype => {
+            Ok(PtypeToken::Reason) if stage == WantStage::Ptype => {
                 props_started = true;
-                stage = PtypeStage::WantReasonEq;
+                stage = WantStage::ReasonEq;
             }
-            Ok(PtypeToken::Equal) if stage == PtypeStage::WantReasonEq => {
+            Ok(PtypeToken::Equal) if stage == WantStage::ReasonEq => {
                 let mut reason_lexer = ReasonToken::lexer(lexer.remainder());
                 let reason_res = match parse_reason(&mut reason_lexer) {
                     Err(e) => return Err(e),
                     Ok(reason) => reason,
                 };
-                match cur_res {
-                    Some(ref mut ref_choice) => {
-                        ref_choice.set_reason(reason_res);
-                    }
-                    _ => {}
+                if let Some(ref mut ref_choice) = cur_res {
+                    ref_choice.set_reason(reason_res);
                 }
                 lexer.bump(reason_lexer.span().end);
-                stage = PtypeStage::WantPtype;
+                stage = WantStage::Ptype;
             }
             Ok(PtypeToken::Equal)
-                if stage == PtypeStage::WantEq && cur_property != PropTypeKey::Nothing =>
+                if stage == WantStage::Eq && cur_property != PropTypeKey::Nothing =>
             {
                 match cur_property {
                     PropTypeKey::DkimHeader(ref property) => {
@@ -300,7 +293,7 @@ pub fn parse_ptype_properties<'hdr>(
                             DkimHeaderPropertyValueToken::lexer(lexer.remainder());
                         let property_value = match parse_dkim_header_property_value(
                             &mut property_value_lexer,
-                            &property,
+                            property,
                         ) {
                             Err(e) => return Err(e),
                             Ok(property_value) => property_value,
@@ -319,7 +312,7 @@ pub fn parse_ptype_properties<'hdr>(
                             DkimPolicyPropertyValueToken::lexer(lexer.remainder());
                         let property_value = match parse_dkim_policy_property_value(
                             &mut property_value_lexer,
-                            &property,
+                            property,
                         ) {
                             Err(e) => return Err(e),
                             Ok(property_value) => property_value,
@@ -338,7 +331,7 @@ pub fn parse_ptype_properties<'hdr>(
                             IpRevPolicyPropertyValueToken::lexer(lexer.remainder());
                         let property_value = match parse_iprev_policy_property_value(
                             &mut property_value_lexer,
-                            &property,
+                            property,
                         ) {
                             Err(e) => return Err(e),
                             Ok(property_value) => property_value,
@@ -357,7 +350,7 @@ pub fn parse_ptype_properties<'hdr>(
                             SpfSmtpPropertyValueToken::lexer(lexer.remainder());
                         let property_value = match parse_spf_smtp_property_value(
                             &mut property_value_lexer,
-                            &property,
+                            property,
                         ) {
                             Err(e) => return Err(e),
                             Ok(property_value) => property_value,
@@ -376,7 +369,7 @@ pub fn parse_ptype_properties<'hdr>(
                             AuthSmtpPropertyValueToken::lexer(lexer.remainder());
                         let property_value = match parse_auth_smtp_property_value(
                             &mut property_value_lexer,
-                            &property,
+                            property,
                         ) {
                             Err(e) => return Err(e),
                             Ok(property_value) => property_value,
@@ -411,7 +404,7 @@ pub fn parse_ptype_properties<'hdr>(
         }
     }
 
-    if props_started == true {
+    if props_started {
         parsed_end = lexer.span().end - parsed_modifier;
     }
 

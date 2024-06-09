@@ -3,6 +3,8 @@
 /// Errors relating to parsing Authentication-Results Header
 #[derive(Clone, Debug, PartialEq)]
 pub enum AuthResultsError {
+    /// No header
+    NoHeader,
     /// Unknown parsing error
     Parse,
     /// Host parsing error

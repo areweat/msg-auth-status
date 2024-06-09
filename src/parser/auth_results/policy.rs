@@ -23,10 +23,11 @@ pub enum PolicyToken<'hdr> {
 }
 
 pub fn parse_policy<'hdr>(
-    lexer: &mut Lexer<'hdr, PolicyToken<'hdr>>,
+    _lexer: &mut Lexer<'hdr, PolicyToken<'hdr>>,
 ) -> Result<&'hdr str, AuthResultsError> {
     let res_policy: Option<&'hdr str> = None;
 
+    /*
     while let Some(token) = lexer.next() {
         match token {
             _ => {
@@ -38,7 +39,7 @@ pub fn parse_policy<'hdr>(
                 );
             }
         }
-    }
+    } */
 
     match res_policy {
         Some(v) => Ok(v),
