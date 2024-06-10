@@ -1,6 +1,7 @@
 //! Allocating DkimSignaturesHandler
 
 use crate::dkim::DkimSignature;
+use crate::error::DkimSignatureError;
 
 /// TODO: Errors
 #[derive(Debug, PartialEq)]
@@ -11,7 +12,7 @@ pub enum DkimSignaturesError {}
 #[derive(Debug, Default)]
 pub struct DkimSignatures<'hdr> {
     /// DKIM-Signature results
-    dkim_signatures: Vec<DkimSignature<'hdr>>,
+    dkim_signatures: Vec<Result<DkimSignature<'hdr>, DkimSignatureError<'hdr>>>,
 }
 
 impl<'hdr> crate::traits::ResultsVerifier for DkimSignatures<'hdr> {
@@ -32,7 +33,7 @@ impl<'hdr> DkimSignatures<'hdr> {
 
         new_self.dkim_signatures = msg
             .header_values("DKIM-Signature")
-            .map(|mh| mh.try_into().unwrap())
+            .map(|mh| mh.try_into())
             .collect();
 
         Ok(new_self)

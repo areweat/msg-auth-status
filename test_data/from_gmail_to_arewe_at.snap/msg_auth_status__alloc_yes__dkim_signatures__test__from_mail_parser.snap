@@ -4,34 +4,36 @@ expression: "&status"
 ---
 DkimSignatures {
     dkim_signatures: [
-        DkimSignature {
-            v: One,
-            a: Rsa_Sha256,
-            b: "izgHs/vKS0T/9V6B0D/Mwa6Vz5lTIJ441xTX1cXQFXjX/e+VZ5Dp1YgDxH3hA/68dr\n         HDatZ8jq2rX7mEgSoETVh+j+2APC0+lkYoK74arS8Ql/S1HYBw/M/lAl933z3pwIl/ro\n         1u51ZQVm6Nv0GlwOjDnpxOn/bGlmIE1ZNFftO4ZC7LwM5gKFLkyl+1HBSegkKy/NKu88\n         xaMF/Kd2mGkH4TtKS61bP+ha2qTly8zzb/r9IJV7gLgx64x3YNtgyqp+RFTFN9YEkhz4\n         HjHJWp9plorio/XARscYCbmH1CEvll+1qJbrHrBJ69Vizqibco96E7wi1lHQMuRVX8zq\n         3ViQ==",
-            bh: "n6uBdfYV0axK08qjFEVpSi1xB2t8jyZS3WI5QRnzhrc=",
-            c: Some(
-                Relaxed,
-            ),
-            d: "gmail.com",
-            h: "to:subject:message-id:date:from:in-reply-to:references:mime-version\n         :from:to:cc:subject:date:message-id:reply-to",
-            i: None,
-            l: None,
-            q: None,
-            s: "20230601",
-            t: Some(
-                Raw(
-                    "1718000136",
+        Ok(
+            DkimSignature {
+                v: One,
+                a: Rsa_Sha256,
+                b: "izgHs/vKS0T/9V6B0D/Mwa6Vz5lTIJ441xTX1cXQFXjX/e+VZ5Dp1YgDxH3hA/68dr\n         HDatZ8jq2rX7mEgSoETVh+j+2APC0+lkYoK74arS8Ql/S1HYBw/M/lAl933z3pwIl/ro\n         1u51ZQVm6Nv0GlwOjDnpxOn/bGlmIE1ZNFftO4ZC7LwM5gKFLkyl+1HBSegkKy/NKu88\n         xaMF/Kd2mGkH4TtKS61bP+ha2qTly8zzb/r9IJV7gLgx64x3YNtgyqp+RFTFN9YEkhz4\n         HjHJWp9plorio/XARscYCbmH1CEvll+1qJbrHrBJ69Vizqibco96E7wi1lHQMuRVX8zq\n         3ViQ==",
+                bh: "n6uBdfYV0axK08qjFEVpSi1xB2t8jyZS3WI5QRnzhrc=",
+                c: Some(
+                    Relaxed,
                 ),
-            ),
-            x: Some(
-                Raw(
-                    "1718604936",
+                d: "gmail.com",
+                h: "to:subject:message-id:date:from:in-reply-to:references:mime-version\n         :from:to:cc:subject:date:message-id:reply-to",
+                i: None,
+                l: None,
+                q: None,
+                s: "20230601",
+                t: Some(
+                    Raw(
+                        "1718000136",
+                    ),
                 ),
-            ),
-            z: None,
-            raw: Some(
-                "v=1; a=rsa-sha256; c=relaxed/relaxed;\n        d=gmail.com; s=20230601; t=1718000136; x=1718604936; darn=arewe.at;\n        h=to:subject:message-id:date:from:in-reply-to:references:mime-version\n         :from:to:cc:subject:date:message-id:reply-to;\n        bh=n6uBdfYV0axK08qjFEVpSi1xB2t8jyZS3WI5QRnzhrc=;\n        b=izgHs/vKS0T/9V6B0D/Mwa6Vz5lTIJ441xTX1cXQFXjX/e+VZ5Dp1YgDxH3hA/68dr\n         HDatZ8jq2rX7mEgSoETVh+j+2APC0+lkYoK74arS8Ql/S1HYBw/M/lAl933z3pwIl/ro\n         1u51ZQVm6Nv0GlwOjDnpxOn/bGlmIE1ZNFftO4ZC7LwM5gKFLkyl+1HBSegkKy/NKu88\n         xaMF/Kd2mGkH4TtKS61bP+ha2qTly8zzb/r9IJV7gLgx64x3YNtgyqp+RFTFN9YEkhz4\n         HjHJWp9plorio/XARscYCbmH1CEvll+1qJbrHrBJ69Vizqibco96E7wi1lHQMuRVX8zq\n         3ViQ==",
-            ),
-        },
+                x: Some(
+                    Raw(
+                        "1718604936",
+                    ),
+                ),
+                z: None,
+                raw: Some(
+                    "v=1; a=rsa-sha256; c=relaxed/relaxed;\n        d=gmail.com; s=20230601; t=1718000136; x=1718604936; darn=arewe.at;\n        h=to:subject:message-id:date:from:in-reply-to:references:mime-version\n         :from:to:cc:subject:date:message-id:reply-to;\n        bh=n6uBdfYV0axK08qjFEVpSi1xB2t8jyZS3WI5QRnzhrc=;\n        b=izgHs/vKS0T/9V6B0D/Mwa6Vz5lTIJ441xTX1cXQFXjX/e+VZ5Dp1YgDxH3hA/68dr\n         HDatZ8jq2rX7mEgSoETVh+j+2APC0+lkYoK74arS8Ql/S1HYBw/M/lAl933z3pwIl/ro\n         1u51ZQVm6Nv0GlwOjDnpxOn/bGlmIE1ZNFftO4ZC7LwM5gKFLkyl+1HBSegkKy/NKu88\n         xaMF/Kd2mGkH4TtKS61bP+ha2qTly8zzb/r9IJV7gLgx64x3YNtgyqp+RFTFN9YEkhz4\n         HjHJWp9plorio/XARscYCbmH1CEvll+1qJbrHrBJ69Vizqibco96E7wi1lHQMuRVX8zq\n         3ViQ==",
+                ),
+            },
+        ),
     ],
 }
