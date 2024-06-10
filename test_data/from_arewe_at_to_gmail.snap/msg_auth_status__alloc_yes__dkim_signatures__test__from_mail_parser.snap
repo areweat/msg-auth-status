@@ -1,0 +1,58 @@
+---
+source: src/alloc_yes/dkim_signatures.rs
+expression: "&status"
+---
+DkimSignatures {
+    dkim_signatures: [
+        DkimSignature {
+            v: One,
+            a: Rsa_Sha256,
+            b: "Q1pcJCMyKT+G69BkGaxzNbuYU1QDacp4K5NkxAYAajJ+l/9eBf\r\n\t5tv+GzwmhWziHknXeKUS0oa1n3PmzP1itsAu53q1zawxYk6rN4Rgtd27jNfHpkrvHmDaZdIl/+j\r\n\tv3KV4bEtFitDJDYQVpx+CyZ382tqWToaqjogBiwZAIrk4RSBeUFb3X3Ymr6Jc8z8VaDnFqK1gxj\r\n\titWw2uGH3NHlQurknRZBkJDZ5jEMq2MzGmCjZ7EaK3xCd8CgPqVnwmJQ7WViOG6f5LxDb8uadJC\r\n\t4E6gH9/CKSUCOmRGFqJLNGSGT1e9hisATRIZQCdsdFYKR5pzlAzHWZhcnFV7lOszvFw==",
+            bh: "xer35AYptzY75cgbqHdT+6+\r\n\tJtrP3Ik4+J5hkf9+qRHk=",
+            c: Some(
+                Relaxed,
+            ),
+            d: "arewe.at",
+            h: "Subject:From:To:Date:Message-ID",
+            i: None,
+            l: None,
+            q: None,
+            s: "202405r",
+            t: Some(
+                Raw(
+                    "1717999985",
+                ),
+            ),
+            x: None,
+            z: None,
+            raw: Some(
+                "v=1; a=rsa-sha256; s=202405r; d=arewe.at; c=relaxed/relaxed;\r\n\th=Subject:From:To:Date:Message-ID; t=1717999985; bh=xer35AYptzY75cgbqHdT+6+\r\n\tJtrP3Ik4+J5hkf9+qRHk=; b=Q1pcJCMyKT+G69BkGaxzNbuYU1QDacp4K5NkxAYAajJ+l/9eBf\r\n\t5tv+GzwmhWziHknXeKUS0oa1n3PmzP1itsAu53q1zawxYk6rN4Rgtd27jNfHpkrvHmDaZdIl/+j\r\n\tv3KV4bEtFitDJDYQVpx+CyZ382tqWToaqjogBiwZAIrk4RSBeUFb3X3Ymr6Jc8z8VaDnFqK1gxj\r\n\titWw2uGH3NHlQurknRZBkJDZ5jEMq2MzGmCjZ7EaK3xCd8CgPqVnwmJQ7WViOG6f5LxDb8uadJC\r\n\t4E6gH9/CKSUCOmRGFqJLNGSGT1e9hisATRIZQCdsdFYKR5pzlAzHWZhcnFV7lOszvFw==;",
+            ),
+        },
+        DkimSignature {
+            v: One,
+            a: Ed25519_Sha256,
+            b: "aaPOfWvsZUfQcQrW+iLUckTYeWuJGa3Gi1Lq/tI93eg2eKWSpk\r\n\tZSxeUD5Xq7xnLS5aYMgl7QEsN9rJlQ5BYrBA==",
+            bh: "xer35AYptzY75cgbqHdT+6+\r\n\tJtrP3Ik4+J5hkf9+qRHk=",
+            c: Some(
+                Relaxed,
+            ),
+            d: "arewe.at",
+            h: "Subject:From:To:Date:Message-ID",
+            i: None,
+            l: None,
+            q: None,
+            s: "202405e",
+            t: Some(
+                Raw(
+                    "1717999985",
+                ),
+            ),
+            x: None,
+            z: None,
+            raw: Some(
+                "v=1; a=ed25519-sha256; s=202405e; d=arewe.at; c=relaxed/relaxed;\r\n\th=Subject:From:To:Date:Message-ID; t=1717999985; bh=xer35AYptzY75cgbqHdT+6+\r\n\tJtrP3Ik4+J5hkf9+qRHk=; b=aaPOfWvsZUfQcQrW+iLUckTYeWuJGa3Gi1Lq/tI93eg2eKWSpk\r\n\tZSxeUD5Xq7xnLS5aYMgl7QEsN9rJlQ5BYrBA==;",
+            ),
+        },
+    ],
+}

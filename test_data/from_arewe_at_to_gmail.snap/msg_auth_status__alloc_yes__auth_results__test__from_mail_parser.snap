@@ -1,0 +1,77 @@
+---
+source: src/alloc_yes/auth_results.rs
+expression: "&status"
+---
+MessageAuthStatus {
+    auth_results: [
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx.google.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [
+                SpfResult {
+                    code: Pass,
+                    reason: None,
+                    smtp_mailfrom: Some(
+                        "rust-sydney@arewe.at",
+                    ),
+                    smtp_helo: None,
+                    raw: Some(
+                        "spf=pass (google.com: domain of rust-sydney@arewe.at designates 136.243.83.41 as permitted sender) smtp.mailfrom=rust-sydney@arewe.at",
+                    ),
+                },
+            ],
+            dkim_result: [
+                DkimResult {
+                    code: Pass,
+                    reason: None,
+                    header_d: None,
+                    header_i: Some(
+                        "@arewe.at",
+                    ),
+                    header_b: Some(
+                        "Q1pcJCMy",
+                    ),
+                    header_a: None,
+                    header_s: Some(
+                        "202405r",
+                    ),
+                    raw: Some(
+                        "dkim=pass header.i=@arewe.at header.s=202405r header.b=Q1pcJCMy",
+                    ),
+                },
+                DkimResult {
+                    code: Neutral,
+                    reason: None,
+                    header_d: None,
+                    header_i: Some(
+                        "@arewe.at",
+                    ),
+                    header_b: None,
+                    header_a: None,
+                    header_s: Some(
+                        "202405e",
+                    ),
+                    raw: Some(
+                        "dkim=neutral (no key) header.i=@arewe.at header.s=202405e",
+                    ),
+                },
+            ],
+            iprev_result: [],
+            unknown_result: [
+                UnknownResult {
+                    raw: "dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=arewe.at",
+                },
+            ],
+            none_done: false,
+            raw: Some(
+                "mx.google.com;\r\n       dkim=pass header.i=@arewe.at header.s=202405r header.b=Q1pcJCMy;\r\n       dkim=neutral (no key) header.i=@arewe.at header.s=202405e;\r\n       spf=pass (google.com: domain of rust-sydney@arewe.at designates 136.243.83.41 as permitted sender) smtp.mailfrom=rust-sydney@arewe.at;\r\n       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=arewe.at",
+            ),
+            errors: [],
+        },
+    ],
+}

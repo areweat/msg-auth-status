@@ -349,6 +349,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     | AuthResultToken::Fail
                     | AuthResultToken::TempError
                     | AuthResultToken::PermError
+                    | AuthResultToken::SoftFail
                     | AuthResultToken::NoneNone
                     | AuthResultToken::Neutral,
                 ) if stage.is_cur_expect_resultset_want() => {

@@ -1,0 +1,83 @@
+---
+source: src/alloc_yes/auth_results.rs
+expression: "&status"
+---
+MessageAuthStatus {
+    auth_results: [
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mail.localhost.horse",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [
+                SpfResult {
+                    code: NoneSpf,
+                    reason: None,
+                    smtp_mailfrom: None,
+                    smtp_helo: Some(
+                        "mail-oa1-x2f.google.com",
+                    ),
+                    raw: Some(
+                        "spf=none (mail.localhost.horse: no SPF records found for postmaster@mail-oa1-x2f.google.com) smtp.helo=mail-oa1-x2f.google.com",
+                    ),
+                },
+                SpfResult {
+                    code: SoftFail,
+                    reason: None,
+                    smtp_mailfrom: Some(
+                        "developer.finchie@gmail.com",
+                    ),
+                    smtp_helo: None,
+                    raw: Some(
+                        "spf=softfail (mail.localhost.horse: domain of developer.finchie@gmail.com reports soft fail for 172.17.0.1) smtp.mailfrom=developer.finchie@gmail.com",
+                    ),
+                },
+            ],
+            dkim_result: [
+                DkimResult {
+                    code: Pass,
+                    reason: None,
+                    header_d: Some(
+                        "gmail.com",
+                    ),
+                    header_i: None,
+                    header_b: Some(
+                        "izgHs/vK",
+                    ),
+                    header_a: None,
+                    header_s: Some(
+                        "20230601",
+                    ),
+                    raw: Some(
+                        "dkim=pass header.d=gmail.com header.s=20230601 header.b=izgHs/vK",
+                    ),
+                },
+            ],
+            iprev_result: [
+                IpRevResult {
+                    code: PermError,
+                    reason: None,
+                    policy_iprev: Some(
+                        "172.17.0.1",
+                    ),
+                    raw: Some(
+                        "iprev=permerror (dns record not found) policy.iprev=172.17.0.1",
+                    ),
+                },
+            ],
+            unknown_result: [
+                UnknownResult {
+                    raw: "dmarc=pass header.from=gmail.com policy.dmarc=none",
+                },
+            ],
+            none_done: false,
+            raw: Some(
+                "mail.localhost.horse;\n\tdkim=pass header.d=gmail.com header.s=20230601 header.b=izgHs/vK;\n\tspf=none (mail.localhost.horse: no SPF records found for postmaster@mail-oa1-x2f.google.com) smtp.helo=mail-oa1-x2f.google.com;\n\tspf=softfail (mail.localhost.horse: domain of developer.finchie@gmail.com reports soft fail for 172.17.0.1) smtp.mailfrom=developer.finchie@gmail.com;\n\tiprev=permerror (dns record not found) policy.iprev=172.17.0.1;\n\tdmarc=pass header.from=gmail.com policy.dmarc=none",
+            ),
+            errors: [],
+        },
+    ],
+}

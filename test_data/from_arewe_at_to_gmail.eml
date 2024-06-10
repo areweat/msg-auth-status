@@ -1,0 +1,67 @@
+Delivered-To: developer.finchie@gmail.com
+Received: by 2002:a05:6358:93a3:b0:19f:4373:c4e9 with SMTP id h35csp940630rwb;
+        Sun, 9 Jun 2024 23:13:05 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH33Owzlw5DGgtFS/O24NNoMikV4ytWKr/z2HiliSU3qETwKnCQYQTkkPlw6twENOMmQDRI
+X-Received: by 2002:a17:906:31cb:b0:a6e:f3d7:4112 with SMTP id a640c23a62f3a-a6ef3f5df57mr395829766b.64.1717999985562;
+        Sun, 09 Jun 2024 23:13:05 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1717999985; cv=none;
+        d=google.com; s=arc-20160816;
+        b=ksfP5o0pDJD5WYoljUXcnf2f82dSFmwzKsBf+2gJyDHlEHnTshBc7+iLvS4nnj1+4n
+         M9Sw4uyCH+8BCkUeHwDC3vTY4p7vuUTVBRGe5T1Qq4y9NGbC8tZg/0JjnH2c+pwdo+8f
+         fcCrcdB5we2jJMJ8LbDZZeK9WQ8LKNMQ/fRuGmoQ5EhlYxvBLnX6yz+KixnmizgZCm1a
+         lulkVRIvmytCVUaPRd66pET3oQKgpld7U6zL++6CKL5U7OP0WiVgmUXb6wMFeUsTj4gf
+         gpdBMcT4W9Tkn6JNaS+3Jr7+NWDM3OwT8jtsJgoDFbHm30fOnCvs3GuXliTABoT9iwoZ
+         N9Cg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
+        h=content-transfer-encoding:subject:from:to:content-language
+         :user-agent:mime-version:date:message-id:dkim-signature
+         :dkim-signature;
+        bh=xer35AYptzY75cgbqHdT+6+JtrP3Ik4+J5hkf9+qRHk=;
+        fh=JpFsdnISqTW5f57E5GsJdaZUyzBLQ+uiofrjl2x4iVc=;
+        b=mEmJO9l0dOQ3nFKXgY0s7XVj6jBErobE0y78VnozY4zgbXIUKoi1Tg6fmJfX/Amoml
+         rq5TdvrYEs96uuykmhha9Fn5fmzjYDTcnG+qF//cf9ZebOF9FIp7s82Wg41OJ4cLUna0
+         p4eimlqjZOh6ycan02WkDABv460V7rhiABXdNyiyQU4hORMOZd6vtyaYM0AHMwKV3A1l
+         4/z8jj6m4LBdLMBwEKKNH53k2u2J6yh2IG7XLgr3zdm+j03zzWO0LhKTfC4AQpMVU+8O
+         AFFBn0YEq1fxCHTcQjuDuHaRiwikR88vWxDPKTqK8Te9MeSG8pOGJaTqzmZ22NH7KRwu
+         i8Wg==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@arewe.at header.s=202405r header.b=Q1pcJCMy;
+       dkim=neutral (no key) header.i=@arewe.at header.s=202405e;
+       spf=pass (google.com: domain of rust-sydney@arewe.at designates 136.243.83.41 as permitted sender) smtp.mailfrom=rust-sydney@arewe.at;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=arewe.at
+Return-Path: <rust-sydney@arewe.at>
+Received: from mail.localhost.horse (mail.localhost.horse. [136.243.83.41])
+        by mx.google.com with ESMTPS id a640c23a62f3a-a6ef52943f1si279201666b.739.2024.06.09.23.13.05
+        for <developer.finchie@gmail.com>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 09 Jun 2024 23:13:05 -0700 (PDT)
+Received-SPF: pass (google.com: domain of rust-sydney@arewe.at designates 136.243.83.41 as permitted sender) client-ip=136.243.83.41;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@arewe.at header.s=202405r header.b=Q1pcJCMy;
+       dkim=neutral (no key) header.i=@arewe.at header.s=202405e;
+       spf=pass (google.com: domain of rust-sydney@arewe.at designates 136.243.83.41 as permitted sender) smtp.mailfrom=rust-sydney@arewe.at;
+       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=arewe.at
+DKIM-Signature: v=1; a=rsa-sha256; s=202405r; d=arewe.at; c=relaxed/relaxed;
+	h=Subject:From:To:Date:Message-ID; t=1717999985; bh=xer35AYptzY75cgbqHdT+6+
+	JtrP3Ik4+J5hkf9+qRHk=; b=Q1pcJCMyKT+G69BkGaxzNbuYU1QDacp4K5NkxAYAajJ+l/9eBf
+	5tv+GzwmhWziHknXeKUS0oa1n3PmzP1itsAu53q1zawxYk6rN4Rgtd27jNfHpkrvHmDaZdIl/+j
+	v3KV4bEtFitDJDYQVpx+CyZ382tqWToaqjogBiwZAIrk4RSBeUFb3X3Ymr6Jc8z8VaDnFqK1gxj
+	itWw2uGH3NHlQurknRZBkJDZ5jEMq2MzGmCjZ7EaK3xCd8CgPqVnwmJQ7WViOG6f5LxDb8uadJC
+	4E6gH9/CKSUCOmRGFqJLNGSGT1e9hisATRIZQCdsdFYKR5pzlAzHWZhcnFV7lOszvFw==;
+DKIM-Signature: v=1; a=ed25519-sha256; s=202405e; d=arewe.at; c=relaxed/relaxed;
+	h=Subject:From:To:Date:Message-ID; t=1717999985; bh=xer35AYptzY75cgbqHdT+6+
+	JtrP3Ik4+J5hkf9+qRHk=; b=aaPOfWvsZUfQcQrW+iLUckTYeWuJGa3Gi1Lq/tI93eg2eKWSpk
+	ZSxeUD5Xq7xnLS5aYMgl7QEsN9rJlQ5BYrBA==;
+Message-ID: <73b4f6eb-b860-4da9-ace9-5b4cc8905c78@arewe.at>
+Date: Mon, 10 Jun 2024 16:13:02 +1000
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: developer.finchie@gmail.com
+From: Rust Sydney <rust-sydney@arewe.at>
+Subject: =?UTF-8?Q?I_am_Bl=C3=A5haj=2E?=
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+I am Blåhaj.

@@ -1,0 +1,101 @@
+X-Spam-Status: No, score=-0.7024328907587529
+X-Spam-Result: RCVD_COUNT_ONE (0),
+	DMARC_POLICY_ALLOW_WITH_FAILURES (0),
+	TO_DN_ALL (0),
+	FREEMAIL_FROM (0),
+	URIBL_BLOCKED (0),
+	DKIM_SIGNED (0),
+	SPF_SOFTFAIL (0),
+	PREVIOUSLY_DELIVERED (0),
+	TRUSTED_REPLY (-7),
+	TO_MATCH_ENVRCPT_ALL (0),
+	FREEMAIL_ENVFROM (0),
+	DKIM_ALLOW (-0.2),
+	FROM_EQ_ENVFROM (0),
+	RCPT_COUNT_ONE (0),
+	FROM_HAS_DN (0),
+	RBL_SENDERSCORE (2),
+	ARC_NA (0),
+	DMARC_POLICY_ALLOW (-0.5),
+	MID_RHS_MATCH_FROMTLD (1),
+	RCVD_TLS_LAST (0),
+	RDNS_NONE (1)
+Received: from mail-oa1-x2f.google.com (unknown [172.17.0.1])
+	(using TLSv1.3 with cipher TLS13_AES_256_GCM_SHA384)
+	by mail.localhost.horse (Stalwart SMTP) with ESMTPS id 27EAA33266010BF;
+	Mon, 10 Jun 2024 06:15:44 +0000
+Authentication-Results: mail.localhost.horse;
+	dkim=pass header.d=gmail.com header.s=20230601 header.b=izgHs/vK;
+	spf=none (mail.localhost.horse: no SPF records found for postmaster@mail-oa1-x2f.google.com) smtp.helo=mail-oa1-x2f.google.com;
+	spf=softfail (mail.localhost.horse: domain of developer.finchie@gmail.com reports soft fail for 172.17.0.1) smtp.mailfrom=developer.finchie@gmail.com;
+	iprev=permerror (dns record not found) policy.iprev=172.17.0.1;
+	dmarc=pass header.from=gmail.com policy.dmarc=none
+Received-SPF: softfail (mail.localhost.horse: domain of developer.finchie@gmail.com reports soft fail for 172.17.0.1)
+	receiver=mail.localhost.horse; client-ip=172.17.0.1; envelope-from="developer.finchie@gmail.com"; helo=mail-oa1-x2f.google.com;
+Return-Path: <developer.finchie@gmail.com>
+Received: by mail-oa1-x2f.google.com with SMTP id 586e51a60fabf-254aec5a084so564109fac.3
+        for <rust-sydney@arewe.at>; Sun, 09 Jun 2024 23:15:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718000136; x=1718604936; darn=arewe.at;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=n6uBdfYV0axK08qjFEVpSi1xB2t8jyZS3WI5QRnzhrc=;
+        b=izgHs/vKS0T/9V6B0D/Mwa6Vz5lTIJ441xTX1cXQFXjX/e+VZ5Dp1YgDxH3hA/68dr
+         HDatZ8jq2rX7mEgSoETVh+j+2APC0+lkYoK74arS8Ql/S1HYBw/M/lAl933z3pwIl/ro
+         1u51ZQVm6Nv0GlwOjDnpxOn/bGlmIE1ZNFftO4ZC7LwM5gKFLkyl+1HBSegkKy/NKu88
+         xaMF/Kd2mGkH4TtKS61bP+ha2qTly8zzb/r9IJV7gLgx64x3YNtgyqp+RFTFN9YEkhz4
+         HjHJWp9plorio/XARscYCbmH1CEvll+1qJbrHrBJ69Vizqibco96E7wi1lHQMuRVX8zq
+         3ViQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718000136; x=1718604936;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=n6uBdfYV0axK08qjFEVpSi1xB2t8jyZS3WI5QRnzhrc=;
+        b=NCp9oSwnwccnfS7pJRdQbKv8IURBkRC682n8FYgnkiBQERA/qhLdRyCjLPQkxpQLAI
+         sOWf3VrUj46hguldHCd6BjZ9x4IdVi4hNv0QPcBbglbS609v7I7gbKcxQJzgOX1KgB7g
+         KuBlm5+hsvFHch283vsbWWihsVTJo3ojNr0+QOrSsXPpPqYu3e9ORQvcgJVFLTADTfgu
+         j4OSYVS4EJAbwjbxMWv1/5n7zCQMYK15BzFIe4gz7ZadrWc94MXHEeY1h6PJVGElMh6u
+         BmY/zyzUQqlc/WhZRLcS0LjdHb4SiH9GD2xn3iqE6u8VAKT6QeZThKTQHiKnDOeBYK+v
+         VLlA==
+X-Gm-Message-State: AOJu0YwgmJ7H6K8cVPlXbyVg78FjlpBpTLDli2MYheCpRpQCJiMOk7Bp
+	cL2VcRtDyQoY39z3Bu6IphrP9mNk9EOldrD5uU3ta4n4KC68y/iK7ScAIZOUjV19fDNFrY6uSam
+	ugYwc+UjaFThL7k8dprHXpaj5oYfm/AjKVqU=
+X-Google-Smtp-Source: AGHT+IH9SZxF9VmGUjyQirHQdcrpaIJF/om6fj/5XmgVxw5tmDeisnu+I+bwannzWF5DMdk1HSS0Fm0yMAPNHul3he8=
+X-Received: by 2002:a05:6871:711:b0:24f:cddc:ccfe with SMTP id
+ 586e51a60fabf-25463ef23f9mr9095082fac.0.1718000135996; Sun, 09 Jun 2024
+ 23:15:35 -0700 (PDT)
+MIME-Version: 1.0
+References: <73b4f6eb-b860-4da9-ace9-5b4cc8905c78@arewe.at>
+In-Reply-To: <73b4f6eb-b860-4da9-ace9-5b4cc8905c78@arewe.at>
+From: Angus Finch <developer.finchie@gmail.com>
+Date: Mon, 10 Jun 2024 14:15:24 +0800
+Message-ID: <CABwN9dOV84a0E8ZgvWhrAj5x52Hb5F2Mtd5LyPLE8Axmi1Y7hA@mail.gmail.com>
+Subject: =?UTF-8?B?UmU6IEkgYW0gQmzDpWhhai4=?=
+To: Rust Sydney <rust-sydney@arewe.at>
+Content-Type: multipart/alternative; boundary="000000000000d48e45061a8313f9"
+
+--000000000000d48e45061a8313f9
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello, Bl=C3=A5haj!
+
+On Mon, 10 Jun 2024 at 14:13, Rust Sydney <rust-sydney@arewe.at> wrote:
+
+> I am Bl=C3=A5haj.
+>
+
+--000000000000d48e45061a8313f9
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hello, Bl=C3=A5haj!
+
+</div><br><div class=3D"gmail_quote"><div dir=3D"ltr" class=3D"gmail_attr">=
+On Mon, 10 Jun 2024 at 14:13, Rust Sydney &lt;<a href=3D"mailto:rust-sydney=
+@arewe.at">rust-sydney@arewe.at</a>&gt; wrote:<br></div><blockquote class=
+=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left:1px solid rg=
+b(204,204,204);padding-left:1ex">I am Bl=C3=A5haj.<br>
+</blockquote></div>
+
+--000000000000d48e45061a8313f9--
