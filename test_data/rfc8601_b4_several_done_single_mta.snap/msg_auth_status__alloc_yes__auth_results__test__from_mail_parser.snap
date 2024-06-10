@@ -38,6 +38,7 @@ MessageAuthStatus {
             ],
             dkim_result: [],
             iprev_result: [],
+            unknown_result: [],
             none_done: false,
             raw: Some(
                 "example.com;\n          auth=pass (cram-md5) smtp.auth=sender@example.net;\n          spf=pass smtp.mailfrom=example.net",
@@ -66,6 +67,7 @@ MessageAuthStatus {
                     ),
                 },
             ],
+            unknown_result: [],
             none_done: false,
             raw: Some(
                 "example.com; iprev=pass\n          policy.iprev=192.0.2.200",

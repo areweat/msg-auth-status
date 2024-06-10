@@ -30,6 +30,7 @@ MessageAuthStatus {
                 },
             ],
             iprev_result: [],
+            unknown_result: [],
             none_done: false,
             raw: Some(
                 "foo.example.net (foobar) 1 (baz);\n    dkim (Because I like it) / 1 (One yay) = (wait for it) fail\n      policy (A dot can go here) . (like that) expired\n      (this surprised me) = (as I wasn't expecting it) 1362471462",

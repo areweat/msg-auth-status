@@ -14,9 +14,7 @@ pub enum DkimAlgorithm<'hdr> {
     Unknown(&'hdr str),
 }
 
-/// Currently no error - may change in future
-#[derive(Debug, PartialEq)]
-pub enum DkimAlgorithmError {}
+use crate::error::DkimAlgorithmError;
 
 impl<'hdr> TryFrom<&'hdr str> for DkimAlgorithm<'hdr> {
     type Error = DkimAlgorithmError;

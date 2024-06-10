@@ -2,6 +2,8 @@
 
 use super::*;
 
+//use crate::error::DkimHeaderError;
+
 /// See RFC 6376 s. 3.5 for the full definitions
 #[derive(Clone, Debug, PartialEq)]
 pub enum DkimHeader<'hdr> {
@@ -47,7 +49,3 @@ pub enum DkimHeader<'hdr> {
     /// Unknown
     Unknown(&'hdr str, &'hdr str),
 }
-
-/// Currently no errors - may change in the future
-#[derive(Clone, Debug, PartialEq)]
-pub enum DkimHeaderError {}

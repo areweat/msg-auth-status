@@ -37,10 +37,12 @@ use dkim::dkim_property_value::{parse_dkim_policy_property_value, DkimPolicyProp
 
 mod iprev;
 use iprev::iprev_property_key::{
-    parse_iprev_policy_property_key, IpRevPolicyPropertyKey, IpRevPolicyPropertyKeyToken,
+    parse_iprev_policy_property_key, parse_iprev_smtp_property_key, IpRevPolicyPropertyKey,
+    IpRevPolicyPropertyKeyToken, IpRevSmtpPropertyKey, IpRevSmtpPropertyKeyToken,
 };
 use iprev::iprev_property_value::{
-    parse_iprev_policy_property_value, IpRevPolicyPropertyValueToken,
+    parse_iprev_policy_property_value, parse_iprev_smtp_property_value,
+    IpRevPolicyPropertyValueToken, IpRevSmtpPropertyValueToken,
 };
 
 //------------------------------------------------------------------------
@@ -61,15 +63,13 @@ use spf::spf_property_value::{parse_spf_smtp_property_value, SpfSmtpPropertyValu
 pub enum PropTypeKey<'hdr> {
     #[default]
     Nothing,
-    //Auth(AuthPtype),
     AuthSmtp(AuthSmtpPropertyKey),
-    DkimHeader(DkimHeaderPropertyKey),
+    DkimHeader(DkimHeaderPropertyKey<'hdr>),
     DkimPolicy(DkimPolicyPropertyKey<'hdr>),
     SpfSmtp(SpfSmtpPropertyKey),
-    IpRevPolicy(IpRevPolicyPropertyKey),
+    IpRevPolicy(IpRevPolicyPropertyKey<'hdr>),
+    IpRevSmtp(IpRevSmtpPropertyKey<'hdr>),
     //Dmarc(DmarcPtype),
-    //IpRev(IpRevPtype),
-    //Spf(SpfPtype),
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -80,6 +80,7 @@ pub enum PtypeChoice {
     DkimHeader,
     DkimPolicy, // not sure
     IpRevPolicy,
+    IpRevSmtp, // fastmail breaks RFC
     SpfSmtp,
 }
 
@@ -104,6 +105,7 @@ impl PtypeChoice {
             },
             Some(ParseCurrentResultChoice::IpRev(_)) => match token {
                 PtypeToken::PtypePolicy => Self::IpRevPolicy,
+                PtypeToken::PtypeSmtp => Self::IpRevSmtp,
                 _ => Self::Nothing,
             },
             _ => Self::Nothing,
@@ -200,7 +202,18 @@ pub fn parse_ptype_properties<'hdr>(
 
                 match cur_ptype_try {
                     PtypeChoice::Nothing => {
-                        return Err(AuthResultsError::ParsePtypeBugInvalidProperty)
+                        let cut_slice = &lexer.source()[lexer.span().start..];
+                        let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
+
+                        let detail = crate::error::ParsingDetail {
+                            component: "parse_properties",
+                            span_start: lexer.span().start,
+                            span_end: lexer.span().end,
+                            source: lexer.source(),
+                            clipped_span: cut_span,
+                            clipped_remaining: cut_slice,
+                        };
+                        return Err(AuthResultsError::ParsePtypeInvalidAssociatedPtype(detail));
                     }
                     _ => {
                         cur_ptype = cur_ptype_try;
@@ -242,6 +255,17 @@ pub fn parse_ptype_properties<'hdr>(
                             };
                         lexer.bump(property_key_lexer.span().end);
                         PropTypeKey::IpRevPolicy(property_key)
+                    }
+                    PtypeChoice::IpRevSmtp => {
+                        let mut property_key_lexer =
+                            IpRevSmtpPropertyKeyToken::lexer(lexer.remainder());
+                        let property_key =
+                            match parse_iprev_smtp_property_key(&mut property_key_lexer) {
+                                Err(e) => return Err(e),
+                                Ok(property_key) => property_key,
+                            };
+                        lexer.bump(property_key_lexer.span().end);
+                        PropTypeKey::IpRevSmtp(property_key)
                     }
                     PtypeChoice::SpfSmtp => {
                         let mut property_key_lexer =
@@ -356,6 +380,25 @@ pub fn parse_ptype_properties<'hdr>(
                             _ => {}
                         }
                     }
+                    PropTypeKey::IpRevSmtp(ref property) => {
+                        let mut property_value_lexer =
+                            IpRevSmtpPropertyValueToken::lexer(lexer.remainder());
+                        let property_value = match parse_iprev_smtp_property_value(
+                            &mut property_value_lexer,
+                            property,
+                        ) {
+                            Err(e) => return Err(e),
+                            Ok(property_value) => property_value,
+                        };
+                        lexer.bump(property_value_lexer.span().end);
+
+                        match cur_res {
+                            Some(ParseCurrentResultChoice::IpRev(ref mut iprev_res)) => {
+                                iprev_res.set_smtp(&property_value);
+                            }
+                            _ => {}
+                        }
+                    }
                     PropTypeKey::SpfSmtp(ref property) => {
                         let mut property_value_lexer =
                             SpfSmtpPropertyValueToken::lexer(lexer.remainder());
@@ -398,6 +441,7 @@ pub fn parse_ptype_properties<'hdr>(
                         return Err(AuthResultsError::PropertyValuesNotImplemented);
                     }
                 };
+                stage = WantStage::Ptype;
             }
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
@@ -411,6 +455,7 @@ pub fn parse_ptype_properties<'hdr>(
                     clipped_span: cut_span,
                     clipped_remaining: cut_slice,
                 };
+
                 return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }

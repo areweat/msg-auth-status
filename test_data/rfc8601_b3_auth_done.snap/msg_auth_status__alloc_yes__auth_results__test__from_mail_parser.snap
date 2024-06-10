@@ -27,6 +27,7 @@ MessageAuthStatus {
             ],
             dkim_result: [],
             iprev_result: [],
+            unknown_result: [],
             none_done: false,
             raw: Some(
                 "example.com;\n          spf=pass smtp.mailfrom=example.net",

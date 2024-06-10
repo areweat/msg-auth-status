@@ -4,16 +4,17 @@ use crate::error::AuthResultsError;
 
 /// IANA Email Authentication Methods ptype / property Mapping stages
 #[derive(Debug, PartialEq)]
-pub enum DkimHeaderPropertyKey {
+pub enum DkimHeaderPropertyKey<'hdr> {
     TagD,
     TagI,
     TagB,
     TagA,
     TagS,
     Rfc5322From,
+    Unknown(&'hdr str),
 }
 
-impl<'hdr> TryFrom<DkimHeaderPropertyKeyToken<'hdr>> for DkimHeaderPropertyKey {
+impl<'hdr> TryFrom<DkimHeaderPropertyKeyToken<'hdr>> for DkimHeaderPropertyKey<'hdr> {
     type Error = AuthResultsError<'hdr>;
     fn try_from(token: DkimHeaderPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
@@ -23,6 +24,7 @@ impl<'hdr> TryFrom<DkimHeaderPropertyKeyToken<'hdr>> for DkimHeaderPropertyKey {
             DkimHeaderPropertyKeyToken::TagA => Self::TagA,
             DkimHeaderPropertyKeyToken::TagS => Self::TagS,
             DkimHeaderPropertyKeyToken::Rfc5322From => Self::Rfc5322From,
+            DkimHeaderPropertyKeyToken::Unknown(val) => Self::Unknown(val),
             _ => return Err(AuthResultsError::ParsePtypeBugInvalidProperty),
         };
         Ok(okk)
@@ -55,28 +57,28 @@ use logos::{Lexer, Logos};
 
 #[derive(Debug, Logos)]
 pub enum DkimHeaderPropertyKeyToken<'hdr> {
+    #[token("a", priority = 1)]
+    TagA,
+
+    #[token("b", priority = 1)]
+    TagB,
+
     #[token("d", priority = 1)]
     TagD,
 
     #[token("i", priority = 1)]
     TagI,
 
-    #[token("b", priority = 1)]
-    TagB,
-
-    #[token("a", priority = 1)]
-    TagA,
-
     #[token("s", priority = 1)]
     TagS,
 
-    #[token("from", priority = 1)]
+    #[token("from", priority = 6)]
     Rfc5322From,
 
     #[token("(", priority = 2)]
     CommentStart,
 
-    #[regex(r#""[a-zA-Z0-9]+""#, |lex| lex.slice(), priority = 3)]
+    #[regex(r"(f[a-po-z]|[ce-hk-rt-z])[a-z\-_]*", |lex| lex.slice(), priority = 3)]
     Unknown(&'hdr str),
 
     #[regex(r"\s+", |lex| lex.slice(), priority = 6)]
@@ -85,7 +87,7 @@ pub enum DkimHeaderPropertyKeyToken<'hdr> {
 
 pub fn parse_dkim_header_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, DkimHeaderPropertyKeyToken<'hdr>>,
-) -> Result<DkimHeaderPropertyKey, AuthResultsError<'hdr>> {
+) -> Result<DkimHeaderPropertyKey<'hdr>, AuthResultsError<'hdr>> {
     while let Some(token) = lexer.next() {
         match token {
             Ok(
@@ -97,8 +99,10 @@ pub fn parse_dkim_header_property_key<'hdr>(
                 | DkimHeaderPropertyKeyToken::Rfc5322From,
             ) => {
                 let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<DkimHeaderPropertyKey, AuthResultsError<'hdr>> =
-                    property.try_into();
+                let mapped_property_res: Result<
+                    DkimHeaderPropertyKey<'hdr>,
+                    AuthResultsError<'hdr>,
+                > = property.try_into();
                 let mapped_property = mapped_property_res
                     .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
                 return Ok(mapped_property);

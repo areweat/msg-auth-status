@@ -27,7 +27,7 @@ pub enum DkimHeaderPropertyValueToken<'hdr> {
 }
 
 impl<'hdr> DkimHeader<'hdr> {
-    fn from_parsed(pkey: &DkimHeaderPropertyKey, val: &'hdr str) -> Self {
+    fn from_parsed(pkey: &DkimHeaderPropertyKey<'hdr>, val: &'hdr str) -> Self {
         match pkey {
             DkimHeaderPropertyKey::TagD => DkimHeader::D(val),
             DkimHeaderPropertyKey::TagI => DkimHeader::I(val),
@@ -43,13 +43,14 @@ impl<'hdr> DkimHeader<'hdr> {
             }
             DkimHeaderPropertyKey::TagS => DkimHeader::S(val),
             DkimHeaderPropertyKey::Rfc5322From => DkimHeader::Rfc5322From(val), // not covered
+            DkimHeaderPropertyKey::Unknown(key) => DkimHeader::Unknown(key, val),
         }
     }
 }
 
 pub fn parse_dkim_header_property_value<'hdr>(
     lexer: &mut Lexer<'hdr, DkimHeaderPropertyValueToken<'hdr>>,
-    property_key: &DkimHeaderPropertyKey,
+    property_key: &DkimHeaderPropertyKey<'hdr>,
 ) -> Result<DkimHeader<'hdr>, AuthResultsError<'hdr>> {
     let mut cur_res: Option<DkimHeader<'hdr>> = None;
 

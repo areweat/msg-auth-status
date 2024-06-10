@@ -10,9 +10,7 @@ pub enum DkimTimestamp<'hdr> {
     Raw(&'hdr str),
 }
 
-/// Currently infallible, may change in the future
-#[derive(Debug, PartialEq)]
-pub enum DkimTimestampError {}
+use crate::error::DkimTimestampError;
 
 impl<'hdr> TryFrom<&'hdr str> for DkimTimestamp<'hdr> {
     type Error = DkimTimestampError;

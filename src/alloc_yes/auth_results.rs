@@ -9,6 +9,13 @@ use crate::auth_results::*;
 
 use crate::error::AuthResultsError;
 
+/// Unknown / unsupported methods
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct UnknownResult<'hdr> {
+    /// Unparsed raw that was ignored
+    pub raw: &'hdr str,
+}
+
 /// Parsed Authentication-Results
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AuthenticationResults<'hdr> {
@@ -22,6 +29,8 @@ pub struct AuthenticationResults<'hdr> {
     pub dkim_result: Vec<DkimResult<'hdr>>,
     /// Parsed iprev = .. records
     pub iprev_result: Vec<IpRevResult<'hdr>>,
+    /// Unknown .. = .. records
+    pub unknown_result: Vec<UnknownResult<'hdr>>,
     /// Whether none was encountered denoting no result
     pub none_done: bool,
     /// Unparsed raw

@@ -30,6 +30,7 @@ MessageAuthStatus {
                 },
             ],
             iprev_result: [],
+            unknown_result: [],
             none_done: false,
             raw: Some(
                 "example.com;\n          dkim=pass (good signature) header.d=example.com",
@@ -70,6 +71,7 @@ MessageAuthStatus {
             ],
             dkim_result: [],
             iprev_result: [],
+            unknown_result: [],
             none_done: false,
             raw: Some(
                 "example.com;\n          auth=pass (cram-md5) smtp.auth=sender@example.com;\n          spf=fail smtp.mailfrom=example.com",

@@ -13,9 +13,7 @@ pub enum DkimCanonicalization<'hdr> {
     Unknown(&'hdr str),
 }
 
-/// Currently infallible may be changed in the future
-#[derive(Clone, Debug, PartialEq)]
-pub enum DkimCanonicalizationError {}
+use crate::error::DkimCanonicalizationError;
 
 impl<'hdr> TryFrom<&'hdr str> for DkimCanonicalization<'hdr> {
     type Error = DkimCanonicalizationError;

@@ -9,11 +9,14 @@ use crate::error::AuthResultsError;
 use crate::iprev::{IpRevResult, IpRevResultCode};
 use crate::spf::{SpfResult, SpfResultCode};
 
+use crate::alloc_yes::UnknownResult;
+
 mod comment;
 mod host_version;
 mod policy;
 mod ptypes;
 mod reason;
+mod unknown;
 mod version;
 
 use comment::{parse_comment, CommentToken};
@@ -21,6 +24,7 @@ use host_version::{parse_host_version, HostVersionToken};
 use policy::{parse_policy, PolicyToken};
 use ptypes::{parse_ptype_properties, PtypeToken};
 use reason::{parse_reason, ReasonToken};
+use unknown::{parse_unknown, UnknownToken};
 use version::{parse_version, VersionToken};
 
 #[cfg(feature = "mail_parser")]
@@ -97,44 +101,47 @@ impl<'hdr> TryFrom<AuthResultToken<'hdr>> for IpRevResultCode {
 #[derive(Debug, Logos)]
 #[logos(skip r"[ \t\r\n]+")]
 pub enum AuthResultToken<'hdr> {
-    #[token("auth", priority = 1)]
+    #[token("auth", priority = 200)]
     Auth,
-    #[token("dkim", priority = 1)]
+    #[token("dkim", priority = 200)]
     Dkim,
-    #[token("spf", priority = 1)]
+    #[token("spf", priority = 200)]
     Spf,
-    #[token("iprev", priority = 1)]
+    #[token("iprev", priority = 200)]
     IpRev,
 
-    #[token("/", priority = 1)]
+    #[token("/", priority = 200)]
     ForwardSlash,
 
-    #[token("=", priority = 1)]
+    #[token("=", priority = 200)]
     Equal,
 
-    #[token("none", priority = 1)]
+    #[token("none", priority = 100)]
     NoneNone,
-    #[token("softfail", priority = 1)]
+    #[token("softfail", priority = 100)]
     SoftFail,
-    #[token("fail", priority = 1)]
+    #[token("fail", priority = 100)]
     Fail,
-    #[token("neutral", priority = 1)]
+    #[token("neutral", priority = 100)]
     Neutral,
-    #[token("pass", priority = 1)]
+    #[token("pass", priority = 100)]
     Pass,
-    #[token("temperror", priority = 1)]
+    #[token("temperror", priority = 100)]
     TempError,
-    #[token("permerror", priority = 2)]
+    #[token("permerror", priority = 100)]
     PermError,
 
-    #[token("reason", priority = 2)]
+    #[token("reason", priority = 50)]
     Reason,
 
-    #[token("policy", priority = 3)]
+    #[token("policy", priority = 50)]
     Policy,
 
-    #[token("(", priority = 6)]
+    #[token("(", priority = 200)]
     CommentStart,
+
+    #[regex("[a-z-_]+", |lex| lex.slice(), priority = 10)]
+    OtherAlphaDash(&'hdr str),
 
     SuperDumbPlaceholder(&'hdr str),
 }
@@ -422,6 +429,23 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     }
                     lexer = comment_lexer.morph();
                 }
+                // unknown/unsupported methods encontered, parse them as "unknown" until ";" (consuming it)
+                Ok(AuthResultToken::OtherAlphaDash(_)) if stage == Stage::WantIdentifier => {
+                    let start = lexer.span().start;
+                    let mut unknown_lexer: Lexer<'hdr, UnknownToken<'hdr>> = lexer.morph();
+                    match parse_unknown(&mut unknown_lexer) {
+                        Ok(raw_end) => {
+                            let raw_str = &unknown_lexer.source()[start..raw_end];
+                            res.unknown_result.push(UnknownResult { raw: raw_str });
+                        }
+                        Err(e) => {
+                            res.errors.push(e);
+                            break;
+                        }
+                    }
+                    lexer = unknown_lexer.morph();
+                }
+                // TODO: OtherAlphaDash for Stage::WantResult
                 _ => {
                     let cut_slice = &lexer.source()[lexer.span().start..];
                     let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
@@ -434,6 +458,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                         clipped_span: cut_span,
                         clipped_remaining: cut_slice,
                     };
+
                     res.errors.push(AuthResultsError::ParsingDetailed(detail));
                     break;
                 }

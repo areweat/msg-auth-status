@@ -1,0 +1,170 @@
+---
+source: src/alloc_yes/auth_results.rs
+expression: "&status"
+---
+MessageAuthStatus {
+    auth_results: [
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx3.messagingengine.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            unknown_result: [
+                UnknownResult {
+                    raw: "x-csa=none",
+                },
+                UnknownResult {
+                    raw: "x-me-sender=none",
+                },
+                UnknownResult {
+                    raw: "x-ptr=pass smtp.helo=mail.localhost.horse\r\n      policy.ptr=mail.localhost.horse",
+                },
+            ],
+            none_done: false,
+            raw: Some(
+                "mx3.messagingengine.com;\r\n    x-csa=none;\r\n    x-me-sender=none;\r\n    x-ptr=pass smtp.helo=mail.localhost.horse\r\n      policy.ptr=mail.localhost.horse",
+            ),
+            errors: [],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx3.messagingengine.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            unknown_result: [
+                UnknownResult {
+                    raw: "bimi=none (No BIMI records found)",
+                },
+            ],
+            none_done: false,
+            raw: Some(
+                "mx3.messagingengine.com;\r\n    bimi=none (No BIMI records found)",
+            ),
+            errors: [],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx3.messagingengine.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            unknown_result: [
+                UnknownResult {
+                    raw: "arc=none (no signatures found)",
+                },
+            ],
+            none_done: false,
+            raw: Some(
+                "mx3.messagingengine.com;\r\n    arc=none (no signatures found)",
+            ),
+            errors: [],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx3.messagingengine.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [
+                SpfResult {
+                    code: Pass,
+                    reason: None,
+                    smtp_mailfrom: Some(
+                        "rust-sydney@arewe.at",
+                    ),
+                    smtp_helo: Some(
+                        "mail.localhost.horse",
+                    ),
+                    raw: Some(
+                        "spf=pass smtp.mailfrom=rust-sydney@arewe.at\r\n      smtp.helo=mail.localhost.horse",
+                    ),
+                },
+            ],
+            dkim_result: [
+                DkimResult {
+                    code: Pass,
+                    reason: None,
+                    header_d: Some(
+                        "arewe.at",
+                    ),
+                    header_i: Some(
+                        "@arewe.at",
+                    ),
+                    header_b: Some(
+                        "Nh7CKMWS",
+                    ),
+                    header_a: Some(
+                        Rsa_Sha256,
+                    ),
+                    header_s: Some(
+                        "202405r",
+                    ),
+                    raw: Some(
+                        "dkim=pass (2048-bit rsa key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=Nh7CKMWS header.a=rsa-sha256 header.s=202405r",
+                    ),
+                },
+                DkimResult {
+                    code: Pass,
+                    reason: None,
+                    header_d: Some(
+                        "arewe.at",
+                    ),
+                    header_i: Some(
+                        "@arewe.at",
+                    ),
+                    header_b: Some(
+                        "yBgMwq3y",
+                    ),
+                    header_a: Some(
+                        Ed25519_Sha256,
+                    ),
+                    header_s: Some(
+                        "202405e",
+                    ),
+                    raw: Some(
+                        "dkim=pass (ed25519 key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=yBgMwq3y header.a=ed25519-sha256 header.s=202405e",
+                    ),
+                },
+            ],
+            iprev_result: [
+                IpRevResult {
+                    code: Pass,
+                    reason: None,
+                    policy_iprev: None,
+                    raw: Some(
+                        "iprev=pass smtp.remote-ip=136.243.83.41 (mail.localhost.horse)",
+                    ),
+                },
+            ],
+            unknown_result: [
+                UnknownResult {
+                    raw: "dmarc=pass policy.published-domain-policy=reject\r\n      policy.applied-disposition=none policy.evaluated-disposition=none\r\n      (p=reject,d=none,d.eval=none) policy.policy-from=p\r\n      header.from=arewe.at",
+                },
+            ],
+            none_done: false,
+            raw: Some(
+                "mx3.messagingengine.com;\r\n    dkim=pass (2048-bit rsa key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=Nh7CKMWS header.a=rsa-sha256 header.s=202405r;\r\n    dkim=pass (ed25519 key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=yBgMwq3y header.a=ed25519-sha256 header.s=202405e;\r\n    dmarc=pass policy.published-domain-policy=reject\r\n      policy.applied-disposition=none policy.evaluated-disposition=none\r\n      (p=reject,d=none,d.eval=none) policy.policy-from=p\r\n      header.from=arewe.at;\r\n    iprev=pass smtp.remote-ip=136.243.83.41 (mail.localhost.horse);\r\n    spf=pass smtp.mailfrom=rust-sydney@arewe.at\r\n      smtp.helo=mail.localhost.horse",
+            ),
+            errors: [],
+        },
+    ],
+}

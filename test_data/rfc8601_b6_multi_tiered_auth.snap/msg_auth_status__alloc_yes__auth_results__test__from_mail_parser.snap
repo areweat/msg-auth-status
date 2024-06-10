@@ -48,6 +48,7 @@ MessageAuthStatus {
                 },
             ],
             iprev_result: [],
+            unknown_result: [],
             none_done: false,
             raw: Some(
                 "example.com;\n      dkim=pass reason=\"good signature\"\n        header.i=@mail-router.example.net;\n      dkim=fail reason=\"bad signature\"\n        header.i=@newyork.example.com",
@@ -80,6 +81,7 @@ MessageAuthStatus {
                 },
             ],
             iprev_result: [],
+            unknown_result: [],
             none_done: false,
             raw: Some(
                 "example.net;\n      dkim=pass (good signature) header.i=@newyork.example.com",

@@ -4,6 +4,8 @@ use logos::{Lexer, Logos};
 
 use crate::dkim::*;
 
+use crate::error::{DkimSignatureError, DkimTagValueError};
+
 #[cfg(feature = "mail_parser")]
 use mail_parser::HeaderValue;
 
@@ -188,7 +190,7 @@ impl<'hdr> ParsedDkimSignature<'hdr> {
 
 // TODO: It would be helpful to highlight all errors
 impl<'hdr> TryFrom<ParsedDkimSignature<'hdr>> for DkimSignature<'hdr> {
-    type Error = DkimSignatureError;
+    type Error = DkimSignatureError<'hdr>;
 
     fn try_from(p: ParsedDkimSignature<'hdr>) -> Result<Self, Self::Error> {
         // Required fields must be present
@@ -248,7 +250,7 @@ impl<'hdr> TryFrom<ParsedDkimSignature<'hdr>> for DkimSignature<'hdr> {
 }
 
 impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for DkimSignature<'hdr> {
-    type Error = DkimSignatureError;
+    type Error = DkimSignatureError<'hdr>;
 
     fn try_from(hval: &'hdr HeaderValue<'hdr>) -> Result<Self, Self::Error> {
         let text = match hval.as_text() {
@@ -296,16 +298,17 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for DkimSignature<'hdr> {
                     let cut_slice = &tag_lexer.source()[tag_lexer.span().start..];
                     let cut_span =
                         &tag_lexer.source()[tag_lexer.span().start..tag_lexer.span().end];
-                    panic!(
-                        "dkim_signature Parse Unrecognised T({:?}) at stage({:?}) span {:?} source {:?}\nClip/Span: {:?} - Clip/Remaining: {:?}\n Case: {:?}",
-                        token,
-                        stage,
-                        tag_lexer.span(),
-                        tag_lexer.source(),
-                        cut_span,
-                        cut_slice,
-                        text,
-                    );
+
+                    let detail = crate::error::ParsingDetail {
+                        component: "parse_dkim_signature",
+                        span_start: tag_lexer.span().start,
+                        span_end: tag_lexer.span().end,
+                        source: tag_lexer.source(),
+                        clipped_span: cut_span,
+                        clipped_remaining: cut_slice,
+                    };
+
+                    return Err(DkimSignatureError::ParsingDetailed(detail));
                 }
             }
         }

@@ -9,9 +9,7 @@ pub enum DkimVersion<'hdr> {
     Unknown(&'hdr str),
 }
 
-/// Currently infallible, may change in the future
-#[derive(Debug, PartialEq)]
-pub enum DkimVersionError {}
+use crate::error::DkimVersionError;
 
 impl<'hdr> TryFrom<&'hdr str> for DkimVersion<'hdr> {
     type Error = DkimVersionError;

@@ -20,6 +20,8 @@ pub struct ParsingDetail<'hdr> {
 /// Errors relating to parsing Authentication-Results Header
 #[derive(Clone, Debug, PartialEq)]
 pub enum AuthResultsError<'hdr> {
+    /// Could not find the ending for unknown method block beginning from
+    RunawayUnknownMethod(usize),
     /// Detailed with ParsingDetail
     ParsingDetailed(ParsingDetail<'hdr>),
     /// No header
@@ -34,8 +36,8 @@ pub enum AuthResultsError<'hdr> {
     ParsePtypeBugInvalidProperty,
     /// Bug
     ParsePtypeBugPropertyGating,
-    /// Invalid ptype Encountered
-    ParsePtypeInvalidPtype,
+    /// Invalid associated ptype Encountered
+    ParsePtypeInvalidAssociatedPtype(ParsingDetail<'hdr>),
     /// Invalid dkim method Result Code
     InvalidDkimResult(String),
     /// Invalid spf method Result Code
@@ -86,4 +88,98 @@ pub enum AuthResultsError<'hdr> {
     UnexpectedForwardSlash,
     /// Bug
     ParseCurrentPushNotImplemented,
+}
+
+/// DKIM-Signature header parsing Errors
+#[derive(Debug)]
+pub enum DkimSignatureError<'hdr> {
+    /// Detailed with ParsingDetail
+    ParsingDetailed(ParsingDetail<'hdr>),
+    /// No tags found at all
+    NoTagFound,
+    /// Encountered unexpected Equal '=' character when a tag was expected
+    UnexpectedEqual,
+    /// Error (from lexer) trying to parse value - Unmatched
+    ParseValueUnmatch,
+    /// Error (from parse conversion) trying to parse a valid value on tag
+    ParseValueInvalid(DkimTagValueError),
+    /// Missign Required v=
+    MissingVersion,
+    /// Msising Required a=
+    MissingAlgorithm,
+    /// Msising Required b=
+    MissingSignature,
+    /// Missing Required bh=
+    MissingBodyHash,
+    /// Missing Required d=
+    MissingResponsibleSdid,
+    /// Msising Required h=
+    MissingSignedHeaderFields,
+    /// Missing Required s=
+    MissingSelector,
+}
+
+/// Currently no error - may change in future
+#[derive(Debug, PartialEq)]
+pub enum DkimAlgorithmError {}
+
+/// Currently infallible may be changed in the future
+#[derive(Clone, Debug, PartialEq)]
+pub enum DkimCanonicalizationError {}
+
+/// Currently infallible, may change in the future
+#[derive(Debug, PartialEq)]
+pub enum DkimTimestampError {}
+
+/// Currently infallible, may change in the future
+#[derive(Debug, PartialEq)]
+pub enum DkimVersionError {}
+
+// Currently no errors - may change in the future
+//#[derive(Clone, Debug, PartialEq)]
+//pub enum DkimHeaderError {}
+
+/// DKIM Header tags values parsing error
+#[derive(Debug, PartialEq)]
+pub enum DkimTagValueError {
+    /// Tag value must appear only once per tag
+    Duplicate,
+    /// DKIM Timestamp parsing error
+    Timestamp(DkimTimestampError),
+    /// DKIM Canonizalition parsing error
+    Canonicalization(DkimCanonicalizationError),
+    /// DKIM Algorithm parsing error
+    Algorithm(DkimAlgorithmError),
+    /// DKIM Version parsing error
+    Version(DkimVersionError),
+}
+
+impl<'hdr> From<DkimTagValueError> for DkimSignatureError<'hdr> {
+    fn from(e: DkimTagValueError) -> Self {
+        Self::ParseValueInvalid(e)
+    }
+}
+
+impl From<DkimTimestampError> for DkimTagValueError {
+    fn from(e: DkimTimestampError) -> Self {
+        Self::Timestamp(e)
+    }
+}
+
+impl From<DkimCanonicalizationError> for DkimTagValueError {
+    fn from(e: DkimCanonicalizationError) -> Self {
+        Self::Canonicalization(e)
+    }
+}
+
+impl From<DkimAlgorithmError> for DkimTagValueError {
+    fn from(e: DkimAlgorithmError) -> Self {
+        Self::Algorithm(e)
+    }
+}
+
+impl From<DkimVersionError> for DkimTagValueError {
+    fn from(e: DkimVersionError) -> Self {
+        Self::Version(e)
+    }
 }

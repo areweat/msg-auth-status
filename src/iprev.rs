@@ -17,8 +17,13 @@ impl<'hdr> IpRevResult<'hdr> {
     pub(crate) fn set_policy(&mut self, prop: &ptypes::IpRevPolicy<'hdr>) -> bool {
         match prop {
             ptypes::IpRevPolicy::IpRev(val) => self.policy_iprev = Some(val),
+            ptypes::IpRevPolicy::Unknown(_key, _val) => {} // ignore RFC unknowns
         }
         true
+    }
+    pub(crate) fn set_smtp(&mut self, _prop: &ptypes::IpRevSmtp<'hdr>) -> bool {
+        // ignore these rfc breaking things
+        false
     }
 }
 

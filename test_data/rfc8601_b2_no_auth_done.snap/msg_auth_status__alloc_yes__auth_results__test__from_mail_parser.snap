@@ -17,6 +17,7 @@ MessageAuthStatus {
             spf_result: [],
             dkim_result: [],
             iprev_result: [],
+            unknown_result: [],
             none_done: true,
             raw: Some(
                 "example.org 1; none",

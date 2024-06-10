@@ -87,19 +87,19 @@ pub mod ptypes;
 pub use ptypes::DkimProperty;
 
 mod algorithm;
-pub use algorithm::{DkimAlgorithm, DkimAlgorithmError};
+pub use algorithm::DkimAlgorithm;
 
 mod canonicalization;
-pub use canonicalization::{DkimCanonicalization, DkimCanonicalizationError};
+pub use canonicalization::DkimCanonicalization;
 
 mod signature;
-pub use signature::{DkimSignature, DkimSignatureError, DkimTagValueError};
+pub use signature::DkimSignature;
 
 mod header;
-pub use header::{DkimHeader, DkimHeaderError};
+pub use header::DkimHeader;
 
 mod timestamp;
-pub use timestamp::{DkimTimestamp, DkimTimestampError};
+pub use timestamp::DkimTimestamp;
 
 mod version;
-pub use version::{DkimVersion, DkimVersionError};
+pub use version::DkimVersion;
