@@ -22,6 +22,17 @@ cargo add msg-auth-status
 | [8601] | ✅ Parsing | Message Header Field for Indicating Message Authentication Status |
 | [6376] | ✅ Parsing | Domainkeys Identified Mail (DKIM) Signatures                      |
 
+## Benches
+
+On 10700K test_data/from_gmail_to_arewe_at.eml as of 2024 June 10
+
+| Public API                                                   | Timings                         |
+| :---                                                         | :---                            |
+| `alloc_yes::MesssageAuthStatus::from_mail_parser`            | [685.76 ns 692.93 ns 705.28 ns] |
+| `alloc_yes::DkimSignatures::from_mail_parser`                | [423.19 ns 424.95 ns 427.80 ns] |
+| `From<mail_parser::HeaderValue>` for `DkimSignature`         | [301.46 ns 302.05 ns 302.69 ns] | 
+| `From<mail_parser::HeaderValue>` for `AuthenticationResults` | [565.54 ns 567.40 ns 569.52 ns] |
+
 ## See Also
 
 - https://www.iana.org/assignments/dkim-parameters/dkim-parameters.xhtml
