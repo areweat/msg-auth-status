@@ -10,6 +10,11 @@ logos = { version = "0.14", default-features = false, features = ["export_derive
 [dev-dependencies]
 insta = { version = "1.38" }
 rstest = { version = "0.19" }
+criterion = { version = "0.5" }
+
+[[bench]]
+name = "bencher"
+harness = false
 
 [features]
 default = ["alloc", "mail_parser", "static", "std"]
