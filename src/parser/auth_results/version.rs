@@ -18,7 +18,7 @@ pub enum VersionToken<'hdr> {
 
 pub fn parse_version<'hdr>(
     lexer: &mut Lexer<'hdr, VersionToken<'hdr>>,
-) -> Result<u32, AuthResultsError> {
+) -> Result<u32, AuthResultsError<'hdr>> {
     let mut res_version: Option<u32> = None;
 
     while let Some(token) = lexer.next() {
@@ -41,12 +41,18 @@ pub fn parse_version<'hdr>(
                 break;
             }
             _ => {
-                panic!(
-                    "parse_version -- Invalid token {:?} - span = {:?} - source = {:?}",
-                    token,
-                    lexer.span(),
-                    lexer.source()
-                );
+                let cut_slice = &lexer.source()[lexer.span().start..];
+                let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
+
+                let detail = crate::error::ParsingDetail {
+                    component: "version",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }
     }

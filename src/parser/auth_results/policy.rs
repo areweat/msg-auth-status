@@ -24,19 +24,21 @@ pub enum PolicyToken<'hdr> {
 
 pub fn parse_policy<'hdr>(
     _lexer: &mut Lexer<'hdr, PolicyToken<'hdr>>,
-) -> Result<&'hdr str, AuthResultsError> {
+) -> Result<&'hdr str, AuthResultsError<'hdr>> {
     let res_policy: Option<&'hdr str> = None;
 
     /*
     while let Some(token) = lexer.next() {
         match token {
-            _ => {
-                panic!(
-                    "parse_policy -- Invalid token {:?} - span = {:?} - source = {:?}",
-                    token,
-                    lexer.span(),
-                    lexer.source()
-                );
+    _ => {
+                let cut_slice = &lexer.source()[lexer.span().start..];
+                let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
+
+                let detail = crate::error::ParsingDetail { component: "parse_ptypes_properties",
+                                                           span_start: lexer.span().start, span_end: lexer.span().end,
+                                                           source: lexer.source(), clipped_span: cut_span, clipped_remaining: cut_slice };
+                return Err(AuthResultsError::ParsingDetailed(detail));
+
             }
         }
     } */

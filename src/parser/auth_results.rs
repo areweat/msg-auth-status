@@ -26,10 +26,10 @@ use version::{parse_version, VersionToken};
 #[cfg(feature = "mail_parser")]
 use mail_parser::HeaderValue;
 
-impl TryFrom<AuthResultToken<'_>> for SmtpAuthResultCode {
-    type Error = AuthResultsError;
+impl<'hdr> TryFrom<AuthResultToken<'hdr>> for SmtpAuthResultCode {
+    type Error = AuthResultsError<'hdr>;
 
-    fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
+    fn try_from(token: AuthResultToken<'hdr>) -> Result<Self, Self::Error> {
         let res = match token {
             AuthResultToken::NoneNone => Self::NoneSmtp,
             AuthResultToken::Pass => Self::Pass,
@@ -42,10 +42,10 @@ impl TryFrom<AuthResultToken<'_>> for SmtpAuthResultCode {
     }
 }
 
-impl TryFrom<AuthResultToken<'_>> for DkimResultCode {
-    type Error = AuthResultsError;
+impl<'hdr> TryFrom<AuthResultToken<'hdr>> for DkimResultCode {
+    type Error = AuthResultsError<'hdr>;
 
-    fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
+    fn try_from(token: AuthResultToken<'hdr>) -> Result<Self, Self::Error> {
         let res = match token {
             AuthResultToken::NoneNone => Self::NoneDkim,
             AuthResultToken::Pass => Self::Pass,
@@ -60,8 +60,8 @@ impl TryFrom<AuthResultToken<'_>> for DkimResultCode {
     }
 }
 
-impl TryFrom<AuthResultToken<'_>> for SpfResultCode {
-    type Error = AuthResultsError;
+impl<'hdr> TryFrom<AuthResultToken<'hdr>> for SpfResultCode {
+    type Error = AuthResultsError<'hdr>;
 
     fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
         let res = match token {
@@ -79,8 +79,8 @@ impl TryFrom<AuthResultToken<'_>> for SpfResultCode {
     }
 }
 
-impl TryFrom<AuthResultToken<'_>> for IpRevResultCode {
-    type Error = AuthResultsError;
+impl<'hdr> TryFrom<AuthResultToken<'hdr>> for IpRevResultCode {
+    type Error = AuthResultsError<'hdr>;
 
     fn try_from(token: AuthResultToken<'_>) -> Result<Self, Self::Error> {
         let res = match token {
@@ -95,7 +95,7 @@ impl TryFrom<AuthResultToken<'_>> for IpRevResultCode {
 }
 
 #[derive(Debug, Logos)]
-#[logos(skip r"[ \r\n]+")]
+#[logos(skip r"[ \t\r\n]+")]
 pub enum AuthResultToken<'hdr> {
     #[token("auth", priority = 1)]
     Auth,
@@ -220,7 +220,7 @@ fn assign_result_code<'hdr>(
     token: AuthResultToken<'hdr>,
     stage: Stage,
     cur_res: &mut ParseCurrentResultCode<'hdr>,
-) -> Result<(), AuthResultsError> {
+) -> Result<(), AuthResultsError<'hdr>> {
     let mut new_res: ParseCurrentResultCode<'hdr> = ParseCurrentResultCode::default();
 
     match stage {
@@ -277,7 +277,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
 
         let text = match hval.as_text() {
             None => {
-                res.error = Some(AuthResultsError::NoHeader);
+                res.errors.push(AuthResultsError::NoHeader);
                 return res;
             }
             Some(text) => text,
@@ -288,7 +288,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
         let host = match parse_host_version(&mut host_lexer) {
             Ok(host) => host,
             Err(e) => {
-                res.error = Some(e);
+                res.errors.push(e);
                 return res;
             }
         };
@@ -331,7 +331,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     let _policy = match parse_policy(&mut policy_lexer) {
                         Ok(policy) => policy,
                         Err(e) => {
-                            res.error = Some(e);
+                            res.errors.push(e);
                             break;
                         }
                     };
@@ -350,7 +350,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                         stage.clone(),
                         &mut cur_res,
                     ) {
-                        res.error = Some(e);
+                        res.errors.push(e);
                         break;
                     }
 
@@ -360,7 +360,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     let raw_part_end =
                         match parse_ptype_properties(&mut ptype_lexer, &mut cur_res.result) {
                             Err(e) => {
-                                res.error = Some(e);
+                                res.errors.push(e);
                                 break;
                             }
                             Ok(raw_part_end) => raw_part_end,
@@ -391,7 +391,8 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                             res.smtp_auth_result.push(auth_res)
                         }
                         _ => {
-                            res.error = Some(AuthResultsError::ParseCurrentPushNotImplemented);
+                            res.errors
+                                .push(AuthResultsError::ParseCurrentPushNotImplemented);
                             break;
                         }
                     }
@@ -404,7 +405,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     let _version_res = match parse_version(&mut version_lexer) {
                         Ok(version) => version,
                         Err(e) => {
-                            res.error = Some(e);
+                            res.errors.push(e);
                             break;
                         }
                     };
@@ -415,33 +416,26 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     match parse_comment(&mut comment_lexer) {
                         Ok(_comment) => {} // TODO: keep comments?
                         Err(e) => {
-                            res.error = Some(e);
+                            res.errors.push(e);
                             break;
                         }
                     }
                     lexer = comment_lexer.morph();
                 }
-                Ok(_) => {
-                    panic!(
-                        "TODO stage({:?}) - Ok got Token {:?} span {:?} - source{:?}",
-                        stage,
-                        token,
-                        lexer.span(),
-                        lexer.source()
-                    );
-                }
-                Err(_) => {
+                _ => {
                     let cut_slice = &lexer.source()[lexer.span().start..];
                     let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
-                    panic!(
-                        "Unrecognised at stage({:?}) span {:?} source {:?}\nClip/Span: {:?} - Clip/Remaining: {:?}\n Case: {:?}",
-                        stage,
-                        lexer.span(),
-                        lexer.source(),
-                        cut_span,
-                        cut_slice,
-                        text,
-                    );
+
+                    let detail = crate::error::ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: lexer.span().start,
+                        span_end: lexer.span().end,
+                        source: lexer.source(),
+                        clipped_span: cut_span,
+                        clipped_remaining: cut_slice,
+                    };
+                    res.errors.push(AuthResultsError::ParsingDetailed(detail));
+                    break;
                 }
             }
         }

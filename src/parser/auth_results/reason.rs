@@ -13,7 +13,7 @@ pub enum ReasonToken<'hdr> {
 
 pub fn parse_reason<'hdr>(
     lexer: &mut Lexer<'hdr, ReasonToken<'hdr>>,
-) -> Result<&'hdr str, AuthResultsError> {
+) -> Result<&'hdr str, AuthResultsError<'hdr>> {
     let mut res_reason: Option<&'hdr str> = None;
 
     let mut started = false;
@@ -30,12 +30,18 @@ pub fn parse_reason<'hdr>(
                 };
             }
             _ => {
-                panic!(
-                    "parse_reason -- Invalid token {:?} - span = {:?} - source = {:?}",
-                    token,
-                    lexer.span(),
-                    lexer.source()
-                );
+                let cut_slice = &lexer.source()[lexer.span().start..];
+                let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
+
+                let detail = crate::error::ParsingDetail {
+                    component: "reason",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }
     }

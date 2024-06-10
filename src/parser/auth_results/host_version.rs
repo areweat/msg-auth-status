@@ -37,7 +37,7 @@ pub enum HostVersionToken<'hdr> {
 
 pub fn parse_host_version<'hdr>(
     lexer: &mut Lexer<'hdr, HostVersionToken<'hdr>>,
-) -> Result<HostVersion<'hdr>, AuthResultsError> {
+) -> Result<HostVersion<'hdr>, AuthResultsError<'hdr>> {
     let mut maybe_host: Option<&'hdr str> = None;
     let mut maybe_version: Option<u32> = None;
 
@@ -73,12 +73,20 @@ pub fn parse_host_version<'hdr>(
                 }
                 *lexer = HostVersionToken::lexer(comment_lexer.remainder());
             }
-            _ => panic!(
-                "parse_host_ver -- Invalid token {:?} - span = {:?} - source = {:?}",
-                token,
-                lexer.span(),
-                lexer.source()
-            ),
+            _ => {
+                let cut_slice = &lexer.source()[lexer.span().start..];
+                let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
+
+                let detail = crate::error::ParsingDetail {
+                    component: "host_version",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
+            }
         }
     }
 

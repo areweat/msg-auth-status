@@ -1,8 +1,27 @@
 //! Public errors
 
+/// Parsing Detail relating to an Error
+#[derive(Clone, Debug, PartialEq)]
+pub struct ParsingDetail<'hdr> {
+    /// Component
+    pub component: &'static str,
+    /// Span start
+    pub span_start: usize,
+    /// Span end
+    pub span_end: usize,
+    /// Source
+    pub source: &'hdr str,
+    /// Clipped span
+    pub clipped_span: &'hdr str,
+    /// Clipped remaining
+    pub clipped_remaining: &'hdr str,
+}
+
 /// Errors relating to parsing Authentication-Results Header
 #[derive(Clone, Debug, PartialEq)]
-pub enum AuthResultsError {
+pub enum AuthResultsError<'hdr> {
+    /// Detailed with ParsingDetail
+    ParsingDetailed(ParsingDetail<'hdr>),
     /// No header
     NoHeader,
     /// Unknown parsing error

@@ -9,7 +9,7 @@ pub enum IpRevPolicyPropertyKey {
 }
 
 impl<'hdr> TryFrom<IpRevPolicyPropertyKeyToken<'hdr>> for IpRevPolicyPropertyKey {
-    type Error = AuthResultsError;
+    type Error = AuthResultsError<'hdr>;
     fn try_from(token: IpRevPolicyPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
             IpRevPolicyPropertyKeyToken::IpRev => Self::IpRev,
@@ -41,12 +41,12 @@ pub enum IpRevPolicyPropertyKeyToken<'hdr> {
 
 pub fn parse_iprev_policy_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, IpRevPolicyPropertyKeyToken<'hdr>>,
-) -> Result<IpRevPolicyPropertyKey, AuthResultsError> {
+) -> Result<IpRevPolicyPropertyKey, AuthResultsError<'hdr>> {
     while let Some(token) = lexer.next() {
         match token {
             Ok(IpRevPolicyPropertyKeyToken::IpRev) => {
                 let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<IpRevPolicyPropertyKey, AuthResultsError> =
+                let mapped_property_res: Result<IpRevPolicyPropertyKey, AuthResultsError<'hdr>> =
                     property.try_into();
                 let mapped_property = mapped_property_res
                     .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
@@ -67,14 +67,15 @@ pub fn parse_iprev_policy_property_key<'hdr>(
                 let cut_slice = &lexer.source()[lexer.span().start..];
                 let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
 
-                panic!(
-                    "parse_iprev_property_key -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
-                    token,
-                    lexer.span(),
-                    lexer.source(),
-                    cut_span,
-	                cut_slice,
-                );
+                let detail = crate::error::ParsingDetail {
+                    component: "iprev_property_key",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }
     }

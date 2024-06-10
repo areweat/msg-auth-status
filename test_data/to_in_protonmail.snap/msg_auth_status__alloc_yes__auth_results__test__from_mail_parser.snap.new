@@ -1,0 +1,150 @@
+---
+source: src/alloc_yes/auth_results.rs
+assertion_line: 89
+expression: "&status"
+---
+MessageAuthStatus {
+    auth_results: [
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mail.protonmail.ch",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mail.protonmail.ch; dkim=pass (Good 2048 bit\r\n    rsa-sha256 signature) header.d=arewe.at header.a=rsa-sha256; dkim=pass\r\n    (Good ed25519-sha256 signature) header.d=arewe.at\r\n    header.a=ed25519-sha256",
+            ),
+            errors: [
+                ParsingDetailed(
+                    ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: 61,
+                        span_end: 67,
+                        source: " (Good 2048 bit\r\n    rsa-sha256 signature) header.d=arewe.at header.a=rsa-sha256; dkim=pass\r\n    (Good ed25519-sha256 signature) header.d=arewe.at\r\n    header.a=ed25519-sha256",
+                        clipped_span: "header",
+                        clipped_remaining: "header.a=rsa-sha256; dkim=pass\r\n    (Good ed25519-sha256 signature) header.d=arewe.at\r\n    header.a=ed25519-sha256",
+                    },
+                ),
+            ],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mail.protonmail.ch",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mail.protonmail.ch; dmarc=pass (p=reject dis=none)\r\n header.from=arewe.at",
+            ),
+            errors: [
+                ParsingDetailed(
+                    ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: 20,
+                        span_end: 21,
+                        source: "mail.protonmail.ch; dmarc=pass (p=reject dis=none)\r\n header.from=arewe.at",
+                        clipped_span: "d",
+                        clipped_remaining: "dmarc=pass (p=reject dis=none)\r\n header.from=arewe.at",
+                    },
+                ),
+            ],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mail.protonmail.ch",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [
+                SpfResult {
+                    code: Pass,
+                    reason: None,
+                    smtp_mailfrom: Some(
+                        "arewe.at",
+                    ),
+                    smtp_helo: None,
+                    raw: Some(
+                        "spf=pass smtp.mailfrom=arewe.at",
+                    ),
+                },
+            ],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mail.protonmail.ch; spf=pass smtp.mailfrom=arewe.at",
+            ),
+            errors: [],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mail.protonmail.ch",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mail.protonmail.ch; arc=none smtp.remote-ip=136.243.83.41",
+            ),
+            errors: [
+                ParsingDetailed(
+                    ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: 20,
+                        span_end: 21,
+                        source: "mail.protonmail.ch; arc=none smtp.remote-ip=136.243.83.41",
+                        clipped_span: "a",
+                        clipped_remaining: "arc=none smtp.remote-ip=136.243.83.41",
+                    },
+                ),
+            ],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mail.protonmail.ch",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mail.protonmail.ch; dkim=pass (2048-bit key) header.d=arewe.at\r\n header.i=@arewe.at header.b=\"Dq3hIIXB\"; dkim=permerror (0-bit key) header.d=arewe.at\r\n header.i=@arewe.at header.b=\"l7vXbjP4\"",
+            ),
+            errors: [
+                ParsingDetailed(
+                    ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: 36,
+                        span_end: 42,
+                        source: " (2048-bit key) header.d=arewe.at\r\n header.i=@arewe.at header.b=\"Dq3hIIXB\"; dkim=permerror (0-bit key) header.d=arewe.at\r\n header.i=@arewe.at header.b=\"l7vXbjP4\"",
+                        clipped_span: "header",
+                        clipped_remaining: "header.i=@arewe.at header.b=\"Dq3hIIXB\"; dkim=permerror (0-bit key) header.d=arewe.at\r\n header.i=@arewe.at header.b=\"l7vXbjP4\"",
+                    },
+                ),
+            ],
+        },
+    ],
+}

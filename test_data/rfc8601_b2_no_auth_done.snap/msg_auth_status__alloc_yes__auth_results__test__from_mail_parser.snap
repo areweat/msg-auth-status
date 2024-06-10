@@ -21,7 +21,7 @@ MessageAuthStatus {
             raw: Some(
                 "example.org 1; none",
             ),
-            error: None,
+            errors: [],
         },
     ],
 }

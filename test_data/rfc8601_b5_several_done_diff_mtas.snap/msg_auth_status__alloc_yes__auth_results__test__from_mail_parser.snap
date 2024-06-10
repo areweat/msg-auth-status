@@ -34,7 +34,7 @@ MessageAuthStatus {
             raw: Some(
                 "example.com;\n          dkim=pass (good signature) header.d=example.com",
             ),
-            error: None,
+            errors: [],
         },
         AuthenticationResults {
             host: Some(
@@ -74,7 +74,7 @@ MessageAuthStatus {
             raw: Some(
                 "example.com;\n          auth=pass (cram-md5) smtp.auth=sender@example.com;\n          spf=fail smtp.mailfrom=example.com",
             ),
-            error: None,
+            errors: [],
         },
     ],
 }

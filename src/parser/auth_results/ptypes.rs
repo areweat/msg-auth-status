@@ -141,12 +141,23 @@ pub enum PtypeToken<'hdr> {
     Whs(&'hdr str),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum WantStage {
     Ptype,
     Dot,
     ReasonEq,
     Eq,
+}
+
+impl core::fmt::Display for WantStage {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match *self {
+            WantStage::Ptype => write!(f, "Ptype"),
+            WantStage::Dot => write!(f, "Dot"),
+            WantStage::ReasonEq => write!(f, "ReasonEq"),
+            WantStage::Eq => write!(f, "Eq"),
+        }
+    }
 }
 
 impl WantStage {
@@ -158,7 +169,7 @@ impl WantStage {
 pub fn parse_ptype_properties<'hdr>(
     lexer: &mut Lexer<'hdr, PtypeToken<'hdr>>,
     cur_res: &mut Option<ParseCurrentResultChoice<'hdr>>,
-) -> Result<usize, AuthResultsError> {
+) -> Result<usize, AuthResultsError<'hdr>> {
     let mut stage = WantStage::Ptype;
     let mut cur_ptype: PtypeChoice = PtypeChoice::Nothing;
     let mut cur_property: PropTypeKey<'hdr> = PropTypeKey::Nothing;
@@ -391,15 +402,16 @@ pub fn parse_ptype_properties<'hdr>(
             _ => {
                 let cut_slice = &lexer.source()[lexer.span().start..];
                 let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
-                panic!(
-                    "parse_ptypes_properties({:?}) -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
-                    stage,
-                    token,
-                    lexer.span(),
-                    lexer.source(),
-                    cut_span,
-                    cut_slice,
-                );
+
+                let detail = crate::error::ParsingDetail {
+                    component: "parse_ptypes_properties",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }
     }

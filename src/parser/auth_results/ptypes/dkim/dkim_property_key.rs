@@ -14,7 +14,7 @@ pub enum DkimHeaderPropertyKey {
 }
 
 impl<'hdr> TryFrom<DkimHeaderPropertyKeyToken<'hdr>> for DkimHeaderPropertyKey {
-    type Error = AuthResultsError;
+    type Error = AuthResultsError<'hdr>;
     fn try_from(token: DkimHeaderPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
             DkimHeaderPropertyKeyToken::TagD => Self::TagD,
@@ -35,7 +35,7 @@ pub enum DkimPolicyPropertyKey<'hdr> {
 }
 
 impl<'hdr> TryFrom<DkimPolicyPropertyKeyToken<'hdr>> for DkimPolicyPropertyKey<'hdr> {
-    type Error = AuthResultsError;
+    type Error = AuthResultsError<'hdr>;
     fn try_from(token: DkimPolicyPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
             DkimPolicyPropertyKeyToken::Unknown(val) => Self::Unknown(val),
@@ -85,7 +85,7 @@ pub enum DkimHeaderPropertyKeyToken<'hdr> {
 
 pub fn parse_dkim_header_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, DkimHeaderPropertyKeyToken<'hdr>>,
-) -> Result<DkimHeaderPropertyKey, AuthResultsError> {
+) -> Result<DkimHeaderPropertyKey, AuthResultsError<'hdr>> {
     while let Some(token) = lexer.next() {
         match token {
             Ok(
@@ -97,7 +97,7 @@ pub fn parse_dkim_header_property_key<'hdr>(
                 | DkimHeaderPropertyKeyToken::Rfc5322From,
             ) => {
                 let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<DkimHeaderPropertyKey, AuthResultsError> =
+                let mapped_property_res: Result<DkimHeaderPropertyKey, AuthResultsError<'hdr>> =
                     property.try_into();
                 let mapped_property = mapped_property_res
                     .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
@@ -118,14 +118,15 @@ pub fn parse_dkim_header_property_key<'hdr>(
                 let cut_slice = &lexer.source()[lexer.span().start..];
                 let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
 
-                panic!(
-                    "parse_dkim_header_property_key -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
-                    token,
-                    lexer.span(),
-                    lexer.source(),
-                    cut_span,
-	                cut_slice,
-                );
+                let detail = crate::error::ParsingDetail {
+                    component: "parse_dkim_header_property_key",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }
     }
@@ -150,13 +151,15 @@ pub enum DkimPolicyPropertyKeyToken<'hdr> {
 
 pub fn parse_dkim_policy_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, DkimPolicyPropertyKeyToken<'hdr>>,
-) -> Result<DkimPolicyPropertyKey<'hdr>, AuthResultsError> {
+) -> Result<DkimPolicyPropertyKey<'hdr>, AuthResultsError<'hdr>> {
     while let Some(token) = lexer.next() {
         match token {
             Ok(DkimPolicyPropertyKeyToken::Unknown(_)) => {
                 let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<DkimPolicyPropertyKey<'hdr>, AuthResultsError> =
-                    property.try_into();
+                let mapped_property_res: Result<
+                    DkimPolicyPropertyKey<'hdr>,
+                    AuthResultsError<'hdr>,
+                > = property.try_into();
                 let mapped_property = mapped_property_res
                     .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
                 return Ok(mapped_property);
@@ -176,14 +179,15 @@ pub fn parse_dkim_policy_property_key<'hdr>(
                 let cut_slice = &lexer.source()[lexer.span().start..];
                 let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
 
-                panic!(
-                    "parse_dkim_policy_property_key -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
-                    token,
-                    lexer.span(),
-                    lexer.source(),
-                    cut_span,
-	                cut_slice,
-                );
+                let detail = crate::error::ParsingDetail {
+                    component: "parse_dkim_policy_property_key",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }
     }

@@ -31,7 +31,7 @@ impl<'hdr> IpRevPolicy<'hdr> {
 pub fn parse_iprev_policy_property_value<'hdr>(
     lexer: &mut Lexer<'hdr, IpRevPolicyPropertyValueToken<'hdr>>,
     property_key: &IpRevPolicyPropertyKey,
-) -> Result<IpRevPolicy<'hdr>, AuthResultsError> {
+) -> Result<IpRevPolicy<'hdr>, AuthResultsError<'hdr>> {
     let mut cur_res: Option<IpRevPolicy<'hdr>> = None;
 
     while let Some(token) = lexer.next() {
@@ -55,14 +55,15 @@ pub fn parse_iprev_policy_property_value<'hdr>(
                 let cut_slice = &lexer.source()[lexer.span().start..];
                 let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
 
-                panic!(
-                    "parse_iprev_policy_property_value -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
-                    token,
-                    lexer.span(),
-                    lexer.source(),
-                    cut_span,
-	                cut_slice,
-                );
+                let detail = crate::error::ParsingDetail {
+                    component: "iprev_property_value",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }
     }

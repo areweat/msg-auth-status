@@ -1,0 +1,121 @@
+---
+source: src/alloc_yes/auth_results.rs
+assertion_line: 89
+expression: "&status"
+---
+MessageAuthStatus {
+    auth_results: [
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx3.messagingengine.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mx3.messagingengine.com;\r\n    x-csa=none;\r\n    x-me-sender=none;\r\n    x-ptr=pass smtp.helo=mail.localhost.horse\r\n      policy.ptr=mail.localhost.horse",
+            ),
+            errors: [
+                ParsingDetailed(
+                    ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: 30,
+                        span_end: 31,
+                        source: "mx3.messagingengine.com;\r\n    x-csa=none;\r\n    x-me-sender=none;\r\n    x-ptr=pass smtp.helo=mail.localhost.horse\r\n      policy.ptr=mail.localhost.horse",
+                        clipped_span: "x",
+                        clipped_remaining: "x-csa=none;\r\n    x-me-sender=none;\r\n    x-ptr=pass smtp.helo=mail.localhost.horse\r\n      policy.ptr=mail.localhost.horse",
+                    },
+                ),
+            ],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx3.messagingengine.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mx3.messagingengine.com;\r\n    bimi=none (No BIMI records found)",
+            ),
+            errors: [
+                ParsingDetailed(
+                    ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: 30,
+                        span_end: 31,
+                        source: "mx3.messagingengine.com;\r\n    bimi=none (No BIMI records found)",
+                        clipped_span: "b",
+                        clipped_remaining: "bimi=none (No BIMI records found)",
+                    },
+                ),
+            ],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx3.messagingengine.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mx3.messagingengine.com;\r\n    arc=none (no signatures found)",
+            ),
+            errors: [
+                ParsingDetailed(
+                    ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: 30,
+                        span_end: 31,
+                        source: "mx3.messagingengine.com;\r\n    arc=none (no signatures found)",
+                        clipped_span: "a",
+                        clipped_remaining: "arc=none (no signatures found)",
+                    },
+                ),
+            ],
+        },
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mx3.messagingengine.com",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [],
+            dkim_result: [],
+            iprev_result: [],
+            none_done: false,
+            raw: Some(
+                "mx3.messagingengine.com;\r\n    dkim=pass (2048-bit rsa key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=Nh7CKMWS header.a=rsa-sha256 header.s=202405r;\r\n    dkim=pass (ed25519 key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=yBgMwq3y header.a=ed25519-sha256 header.s=202405e;\r\n    dmarc=pass policy.published-domain-policy=reject\r\n      policy.applied-disposition=none policy.evaluated-disposition=none\r\n      (p=reject,d=none,d.eval=none) policy.policy-from=p\r\n      header.from=arewe.at;\r\n    iprev=pass smtp.remote-ip=136.243.83.41 (mail.localhost.horse);\r\n    spf=pass smtp.mailfrom=rust-sydney@arewe.at\r\n      smtp.helo=mail.localhost.horse",
+            ),
+            errors: [
+                ParsingDetailed(
+                    ParsingDetail {
+                        component: "parse_ptypes_properties",
+                        span_start: 45,
+                        span_end: 51,
+                        source: " (2048-bit rsa key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=Nh7CKMWS header.a=rsa-sha256 header.s=202405r;\r\n    dkim=pass (ed25519 key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=yBgMwq3y header.a=ed25519-sha256 header.s=202405e;\r\n    dmarc=pass policy.published-domain-policy=reject\r\n      policy.applied-disposition=none policy.evaluated-disposition=none\r\n      (p=reject,d=none,d.eval=none) policy.policy-from=p\r\n      header.from=arewe.at;\r\n    iprev=pass smtp.remote-ip=136.243.83.41 (mail.localhost.horse);\r\n    spf=pass smtp.mailfrom=rust-sydney@arewe.at\r\n      smtp.helo=mail.localhost.horse",
+                        clipped_span: "header",
+                        clipped_remaining: "header.i=@arewe.at\r\n      header.b=Nh7CKMWS header.a=rsa-sha256 header.s=202405r;\r\n    dkim=pass (ed25519 key sha256) header.d=arewe.at header.i=@arewe.at\r\n      header.b=yBgMwq3y header.a=ed25519-sha256 header.s=202405e;\r\n    dmarc=pass policy.published-domain-policy=reject\r\n      policy.applied-disposition=none policy.evaluated-disposition=none\r\n      (p=reject,d=none,d.eval=none) policy.policy-from=p\r\n      header.from=arewe.at;\r\n    iprev=pass smtp.remote-ip=136.243.83.41 (mail.localhost.horse);\r\n    spf=pass smtp.mailfrom=rust-sydney@arewe.at\r\n      smtp.helo=mail.localhost.horse",
+                    },
+                ),
+            ],
+        },
+    ],
+}

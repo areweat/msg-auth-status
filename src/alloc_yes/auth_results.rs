@@ -26,8 +26,8 @@ pub struct AuthenticationResults<'hdr> {
     pub none_done: bool,
     /// Unparsed raw
     pub raw: Option<&'hdr str>,
-    /// Parsing error if any
-    pub error: Option<AuthResultsError>,
+    /// Parsing errors if any
+    pub errors: Vec<AuthResultsError<'hdr>>,
 }
 
 /// Allocating type for parsed all Authentication-Results in email

@@ -10,7 +10,7 @@ pub enum AuthSmtpPropertyKey {
 }
 
 impl<'hdr> TryFrom<AuthSmtpPropertyKeyToken<'hdr>> for AuthSmtpPropertyKey {
-    type Error = AuthResultsError;
+    type Error = AuthResultsError<'hdr>;
     fn try_from(token: AuthSmtpPropertyKeyToken<'hdr>) -> Result<Self, Self::Error> {
         let okk = match token {
             AuthSmtpPropertyKeyToken::MailFrom => Self::MailFrom,
@@ -46,12 +46,12 @@ pub enum AuthSmtpPropertyKeyToken<'hdr> {
 
 pub fn parse_auth_smtp_property_key<'hdr>(
     lexer: &mut Lexer<'hdr, AuthSmtpPropertyKeyToken<'hdr>>,
-) -> Result<AuthSmtpPropertyKey, AuthResultsError> {
+) -> Result<AuthSmtpPropertyKey, AuthResultsError<'hdr>> {
     while let Some(token) = lexer.next() {
         match token {
             Ok(AuthSmtpPropertyKeyToken::MailFrom | AuthSmtpPropertyKeyToken::Auth) => {
                 let property = token.map_err(|_| AuthResultsError::ParsePtypeBugPropertyGating)?;
-                let mapped_property_res: Result<AuthSmtpPropertyKey, AuthResultsError> =
+                let mapped_property_res: Result<AuthSmtpPropertyKey, AuthResultsError<'hdr>> =
                     property.try_into();
                 let mapped_property = mapped_property_res
                     .map_err(|_| AuthResultsError::ParsePtypeBugInvalidProperty)?;
@@ -72,14 +72,15 @@ pub fn parse_auth_smtp_property_key<'hdr>(
                 let cut_slice = &lexer.source()[lexer.span().start..];
                 let cut_span = &lexer.source()[lexer.span().start..lexer.span().end];
 
-                panic!(
-                    "parse_auth_property_key -- Invalid token {:?} - span = {:?}\n - Source = {:?}\n - Clipped/span: {:?}\n - Clipped/remaining: {:?}",
-                    token,
-                    lexer.span(),
-                    lexer.source(),
-                    cut_span,
-	                cut_slice,
-                );
+                let detail = crate::error::ParsingDetail {
+                    component: "auth_property_key",
+                    span_start: lexer.span().start,
+                    span_end: lexer.span().end,
+                    source: lexer.source(),
+                    clipped_span: cut_span,
+                    clipped_remaining: cut_slice,
+                };
+                return Err(AuthResultsError::ParsingDetailed(detail));
             }
         }
     }
