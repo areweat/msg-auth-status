@@ -10,9 +10,7 @@ DkimSignatures {
             b: "iJjSseqs+2fAkHZDv7lvc0OlxNORcsgocEhoV72Y0oIrnsJq\n\tPWAePgRmiL5usHnyQufrk0466xPSkop2fQsTZwkethIX8IAjvethjsS/PmuHhy7Z\n\tmMMiIr8qgErlLmv7lSETu3ILriGxexlR3chzuxnMXuZm+blh0JHiNi2TOty7Fgjr\n\t1Wtd94jc3O7ktfpuoYOJ/oqUXtm80K+kjkgwA/ZJR2ofu2MZ46HP9Ats/OFKe2TX\n\tfkQS/vAB0l0Qy3j5TarrAuTGGv5ex87o8toF45RMFxIx87fAsMrTFAIJ3xSeeaqC\n\tOo5mwseNt8LGoBKl+sSBGR2z5Uy6ry4Gcbz7DQ==",
             bh: "+PcDwCxRoef2jeinvITWa8LARNOcNr8z\n\tC4ltRY0Q75c=",
             c: Some(
-                Unknown(
-                    "relaxed/relaxed",
-                ),
+                Relaxed,
             ),
             d: "fastmail.com",
             h: "\n\tcc:content-type:content-type:date:date:from:from:in-reply-to\n\t:message-id:mime-version:reply-to:subject:subject:to:to",
@@ -41,9 +39,7 @@ DkimSignatures {
             b: "V4+v/lTWv46osTseC2jkUaeL51v1tr6Hxm7awblvx0MN3CosG/X\n\tZUNA9tatWo/qAL2LtVKo2jWI4GfpxLbBc3d7Iehs21foB3D4e8mW/hGj8mKWR87R\n\tgHs3MP6Sc9ONpvluEfVchqem74rVBUoOq0HzJJ8rBlaVEX5CiHFxOu97w8XO9H9s\n\t8uP8KNhKz5Rr4dv2UnMsLcp/9kCxrpx/Tnvn/uAW6M74/B7vJUze16FHLjShpNei\n\tCuChwIqIQOJsiAS1Q45p0cAZyszDR+ilbJWSuWZYB1u4slUW4U2IfgdfbDFvoijp\n\tg2LR1w6pPknBCgEtmhHP3jYyERERDNX8bew==",
             bh: "+PcDwCxRoef2jeinvITWa8LARNOcNr8zC4l\n\ttRY0Q75c=",
             c: Some(
-                Unknown(
-                    "relaxed/relaxed",
-                ),
+                Relaxed,
             ),
             d: "\n\tmessagingengine.com",
             h: "cc:content-type:content-type:date:date\n\t:feedback-id:feedback-id:from:from:in-reply-to:message-id\n\t:mime-version:reply-to:subject:subject:to:to:x-me-proxy\n\t:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc",

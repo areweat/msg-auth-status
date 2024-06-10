@@ -10,9 +10,7 @@ DkimSignatures {
             b: "Dq3hIIXBcR1H/QgIVhiVz1Fk7pud9UDd5qehFz+xcy1mKCTfyi\r\n Mb2JrJKNk6APVI85kdlC9yCbu9qWBz3p8UaCJG17eIKVHfufzpW/EqG/VbdO00gdu6Ucr16KmqX\r\n fs5bMV+ReHvbxjTIRT7OPeyQGEzpt1bHqOuxz2ht8qD2N4ij9n7xalYOB/zouytNvf7gQ9fpaD3\r\n V2vS1jnnrECcTEZq5EkjkmNPZG5tIyDBcg4kWC8X7Y4iCWccCYR6CkYPR3bPL59y19R/Qi54pt/\r\n 1BizRB4JWzgzcBbiLMemwKevNrijS1fHZEXd6K+Vyw/u3/JZSec2K/E9Dk5n4dp5mEA==",
             bh: "g3zLYH4xKxcPrHOD18z9Yfp\r\n Qcnk/GaJedfustWU5uGs=",
             c: Some(
-                Unknown(
-                    "relaxed/relaxed",
-                ),
+                Relaxed,
             ),
             d: "arewe.at",
             h: "Subject:From:To:Date:Message-ID",
@@ -37,9 +35,7 @@ DkimSignatures {
             b: "l7vXbjP4RipLZitIU/b6U++T688hX05ByMmcvSPqgRcFM0InLU\r\n sEe/jp0BoZZV0pEqi1M8NV2ysQvL45O71ECg==",
             bh: "g3zLYH4xKxcPrHOD18z9Yfp\r\n Qcnk/GaJedfustWU5uGs=",
             c: Some(
-                Unknown(
-                    "relaxed/relaxed",
-                ),
+                Relaxed,
             ),
             d: "arewe.at",
             h: "Subject:From:To:Date:Message-ID",

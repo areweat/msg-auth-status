@@ -23,6 +23,7 @@ impl<'hdr> TryFrom<&'hdr str> for DkimCanonicalization<'hdr> {
             "simple" => Self::Simple,
             "simple/simple" => Self::Simple,
             "relaxed" => Self::Relaxed,
+            "relaxed/relaxed" => Self::Relaxed,
             "relaxed/simple" => Self::Relaxed,
             _ => Self::Unknown(hdr),
         };
