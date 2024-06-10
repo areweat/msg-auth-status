@@ -13,6 +13,16 @@
 extern crate alloc;
 
 //---------------------------------------------------------
+// Re-exports on external types we may use
+//---------------------------------------------------------
+
+#[cfg(feature = "mail_parser")]
+pub mod mail_parser {
+    //! Re-export of the used external mail_parser
+    pub use mail_parser::{HeaderValue, Message, MessageParser};
+}
+
+//---------------------------------------------------------
 // Traits
 //---------------------------------------------------------
 

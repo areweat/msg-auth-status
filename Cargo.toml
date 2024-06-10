@@ -14,6 +14,17 @@ criterion = { version = "0.5" }
 
 [[bench]]
 name = "bencher"
+required-features = ["mail_parser"]
+harness = false
+
+[[example]]
+name = "conversion_dkim"
+required-features = ["mail_parser"]
+harness = false
+
+[[example]]
+name = "conversion_auth_results"
+required-features = ["mail_parser", "alloc"]
 harness = false
 
 [features]
