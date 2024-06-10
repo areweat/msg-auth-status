@@ -19,6 +19,7 @@ extern crate alloc;
 #[cfg(feature = "mail_parser")]
 pub mod mail_parser {
     //! Re-export of the used external mail_parser
+    #[doc(inline)]
     pub use mail_parser::{HeaderValue, Message, MessageParser};
 }
 

@@ -82,6 +82,7 @@ pub enum DkimHeaderPropertyKeyToken<'hdr> {
     Unknown(&'hdr str),
 
     #[regex(r"\s+", |lex| lex.slice(), priority = 6)]
+    #[allow(dead_code)]
     WhiteSpaces(&'hdr str),
 }
 

@@ -47,7 +47,7 @@ pub struct MessageAuthStatus<'hdr> {
     auth_results: Vec<AuthenticationResults<'hdr>>,
 }
 
-/// TODO: Fix errors
+/// Currently all errors are inside results - this may change in future
 #[derive(Debug, PartialEq)]
 pub enum MessageAuthStatusError {}
 

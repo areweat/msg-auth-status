@@ -140,6 +140,7 @@ pub enum PtypeToken<'hdr> {
     Reason,
 
     #[regex(r"[\s\r\n\t]+", |lex| lex.slice(), priority = 6)]
+    #[allow(dead_code)]
     Whs(&'hdr str),
 }
 

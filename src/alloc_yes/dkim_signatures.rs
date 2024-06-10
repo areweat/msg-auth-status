@@ -3,7 +3,7 @@
 use crate::dkim::DkimSignature;
 use crate::error::DkimSignatureError;
 
-/// TODO: Errors
+/// No holding errors - currently all errors are inside results
 #[derive(Debug, PartialEq)]
 pub enum DkimSignaturesError {}
 

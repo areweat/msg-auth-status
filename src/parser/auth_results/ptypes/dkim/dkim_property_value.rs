@@ -23,6 +23,7 @@ pub enum DkimHeaderPropertyValueToken<'hdr> {
     MaybeValue(&'hdr str),
 
     #[regex(r"[\s\r\n\t]+", |lex| lex.slice(), priority = 3)]
+    #[allow(dead_code)]
     Whs(&'hdr str),
 }
 
