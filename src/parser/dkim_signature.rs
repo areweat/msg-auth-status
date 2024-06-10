@@ -72,7 +72,7 @@ pub enum DkimFieldKeyToken<'hdr> {
     TagB,
 
     // Allows everything else alpha than above as unknown tags
-    #[regex(r"(b[a-gi-z]|[efgjkmnopryuv][a-z]+)", |lex| lex.slice(), priority = 3)]
+    #[regex(r"([dvacdhilqtxvz][a-z]+|b[a-gi-z]|[efgjkmnopryu][a-z]*)", |lex| lex.slice(), priority = 3)]
     MaybeTag(&'hdr str),
 }
 
