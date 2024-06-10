@@ -1,4 +1,8 @@
-//! Traits
+//! WIP - Traits beginnings not done yet
+//!
+//! Idea of these traits is to enable non-allocated version
+//! of parsing results without any sort of Vec and generalise
+//! the implementation between allocating and non-allocating
 
 /// Tie-in Controller
 pub trait ResultsHandler {}
