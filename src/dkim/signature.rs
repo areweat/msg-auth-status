@@ -33,4 +33,6 @@ pub struct DkimSignature<'hdr> {
     pub x: Option<DkimTimestamp<'hdr>>,
     /// Copied header fields
     pub z: Option<&'hdr str>,
+    /// Raw unparsed
+    pub raw: Option<&'hdr str>,
 }

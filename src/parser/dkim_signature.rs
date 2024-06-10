@@ -20,7 +20,7 @@ pub enum DkimFieldValueToken<'hdr> {
 
 /// See RFC 6376 s. 3.5 - DKIM Tags
 #[derive(Debug, Logos)]
-#[logos(skip r"[ \r\n]+")]
+#[logos(skip r"[ \t\r\n]+")]
 pub enum DkimFieldKeyToken<'hdr> {
     #[token("v", priority = 1)]
     TagV, // Version - RFC 6376 only defines "1"
@@ -158,6 +158,8 @@ struct ParsedDkimSignature<'hdr> {
     pub x: Option<DkimTimestamp<'hdr>>,
     /// Copied header fields
     pub z: Option<&'hdr str>,
+    /// Raw unparsed
+    pub raw: Option<&'hdr str>,
 }
 
 impl<'hdr> ParsedDkimSignature<'hdr> {
@@ -230,6 +232,7 @@ impl<'hdr> TryFrom<ParsedDkimSignature<'hdr>> for DkimSignature<'hdr> {
         let t = p.t;
         let x = p.x;
         let z = p.z;
+        let raw = p.raw;
         Ok(Self {
             v: version,
             a: algorithm,
@@ -245,6 +248,7 @@ impl<'hdr> TryFrom<ParsedDkimSignature<'hdr>> for DkimSignature<'hdr> {
             t,
             x,
             z,
+            raw,
         })
     }
 }
@@ -260,7 +264,10 @@ impl<'hdr> TryFrom<&'hdr HeaderValue<'hdr>> for DkimSignature<'hdr> {
 
         let mut tag_lexer = DkimFieldKeyToken::lexer(text);
         let mut stage = Stage::WantTag;
-        let mut res = ParsedDkimSignature::default();
+        let mut res = ParsedDkimSignature {
+            raw: Some(text),
+            ..Default::default()
+        };
 
         while let Some(token) = tag_lexer.next() {
             match token {

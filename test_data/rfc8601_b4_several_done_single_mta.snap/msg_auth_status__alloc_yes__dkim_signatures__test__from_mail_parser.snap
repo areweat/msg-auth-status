@@ -1,0 +1,7 @@
+---
+source: src/alloc_yes/dkim_signatures.rs
+expression: "&status"
+---
+DkimSignatures {
+    dkim_signatures: [],
+}

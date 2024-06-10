@@ -1,0 +1,58 @@
+---
+source: src/alloc_yes/dkim_signatures.rs
+expression: "&status"
+---
+DkimSignatures {
+    dkim_signatures: [
+        DkimSignature {
+            v: One,
+            a: Rsa_Sha256,
+            b: "oINEO8hgn/gnunsg ... 9n9ODSNFSDij3=",
+            bh: "ftA9J6GtX8OpwUECzHnCkRzKw1uk6FNiLfJl5Nmv49E=",
+            c: Some(
+                Relaxed,
+            ),
+            d: "mail-router.example.net",
+            h: "From:Date:To:Message-Id:Subject:Authentication-Results",
+            i: None,
+            l: None,
+            q: None,
+            s: "furble",
+            t: Some(
+                Raw(
+                    "1188964198",
+                ),
+            ),
+            x: None,
+            z: None,
+            raw: Some(
+                "v=1; a=rsa-sha256; s=furble;\n      d=mail-router.example.net; t=1188964198; c=relaxed/simple;\n      h=From:Date:To:Message-Id:Subject:Authentication-Results;\n      bh=ftA9J6GtX8OpwUECzHnCkRzKw1uk6FNiLfJl5Nmv49E=;\n      b=oINEO8hgn/gnunsg ... 9n9ODSNFSDij3=",
+            ),
+        },
+        DkimSignature {
+            v: One,
+            a: Rsa_Sha256,
+            b: "EToRSuvUfQVP3Bkz ... rTB0t0gYnBVCM=",
+            bh: "sEu28nfs9fuZGD/pSr7ANysbY3jtdaQ3Xv9xPQtS0m7=",
+            c: Some(
+                Simple,
+            ),
+            d: "newyork.example.com",
+            h: "From:Date:To:Message-Id:Subject",
+            i: None,
+            l: None,
+            q: None,
+            s: "gatsby",
+            t: Some(
+                Raw(
+                    "1188964191",
+                ),
+            ),
+            x: None,
+            z: None,
+            raw: Some(
+                "v=1; a=rsa-sha256; s=gatsby;\n      d=newyork.example.com;\n      t=1188964191; c=simple/simple;\n      h=From:Date:To:Message-Id:Subject;\n      bh=sEu28nfs9fuZGD/pSr7ANysbY3jtdaQ3Xv9xPQtS0m7=;\n      b=EToRSuvUfQVP3Bkz ... rTB0t0gYnBVCM=",
+            ),
+        },
+    ],
+}

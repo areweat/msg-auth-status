@@ -4,20 +4,37 @@
 //! of parsing results without any sort of Vec and generalise
 //! the implementation between allocating and non-allocating
 
-/// Tie-in Controller
-pub trait ResultsHandler {}
+/// Implement this to denote it's a DKIM Verifier containing result set
+#[allow(unused_variables, dead_code)]
+pub(crate) trait ResultsVerifier {
+    fn return_path_atleast_one_dkim_pass(&self, selector: &str) -> bool;
+}
 
-/// Receive DkimResults
-pub trait DkimResultsHandler {}
+#[allow(unused_variables, dead_code)]
+pub(crate) trait ResultVerifier {
+    fn return_path_dkim_pass(&self, selector: &str) -> bool;
+}
 
-/// Receive SpfResults
-pub trait SpfResultsHandler {}
+/// Tie-in Controller for consumers
+#[allow(dead_code)]
+pub(crate) trait ResultsHandler {}
 
-/// Receive AuthResults
-pub trait AuthResultsHandler {}
+/// Receive DkimResults for consumers
+#[allow(dead_code)]
+pub(crate) trait DkimResultsHandler {}
 
-/// Receive IpRevResults
-pub trait IpRevResultsHandler {}
+/// Receive SpfResults for consumers
+#[allow(dead_code)]
+pub(crate) trait SpfResultsHandler {}
 
-/// Receive Comments
-pub trait CommentsHandler {}
+/// Receive AuthResults for consumers
+#[allow(dead_code)]
+pub(crate) trait AuthResultsHandler {}
+
+/// Receive IpRevResults for consumers
+#[allow(dead_code)]
+pub(crate) trait IpRevResultsHandler {}
+
+/// Receive Comments for consumers
+#[allow(dead_code)]
+pub(crate) trait CommentsHandler {}

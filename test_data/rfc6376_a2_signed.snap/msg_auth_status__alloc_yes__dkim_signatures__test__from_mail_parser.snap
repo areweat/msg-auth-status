@@ -1,0 +1,33 @@
+---
+source: src/alloc_yes/dkim_signatures.rs
+expression: "&status"
+---
+DkimSignatures {
+    dkim_signatures: [
+        DkimSignature {
+            v: One,
+            a: Rsa_Sha256,
+            b: "AuUoFEfDxTDkHlLXSZEpZj79LICEps6eda7W3deTVFOk4yAUoqOB\n     4nujc7YopdG5dWLSdNg6xNAZpOPr+kHxt1IrE+NahM6L/LbvaHut\n     KVdkLLkpVaVVQPzeRDI009SO2Il5Lu7rDNH6mZckBdrIx0orEtZV\n     4bmp/YzhwvcubU4=",
+            bh: "2jUSOH9NhtVGCQWNr9BrIAPreKQjO6Sn7XIkfJVOzv8=",
+            c: Some(
+                Simple,
+            ),
+            d: "example.com",
+            h: "Received : From : To : Subject : Date : Message-ID",
+            i: Some(
+                "joe@football.example.com",
+            ),
+            l: None,
+            q: Some(
+                "dns/txt",
+            ),
+            s: "brisbane",
+            t: None,
+            x: None,
+            z: None,
+            raw: Some(
+                "v=1; a=rsa-sha256; s=brisbane; d=example.com;\n     c=simple/simple; q=dns/txt; i=joe@football.example.com;\n     h=Received : From : To : Subject : Date : Message-ID;\n     bh=2jUSOH9NhtVGCQWNr9BrIAPreKQjO6Sn7XIkfJVOzv8=;\n     b=AuUoFEfDxTDkHlLXSZEpZj79LICEps6eda7W3deTVFOk4yAUoqOB\n     4nujc7YopdG5dWLSdNg6xNAZpOPr+kHxt1IrE+NahM6L/LbvaHut\n     KVdkLLkpVaVVQPzeRDI009SO2Il5Lu7rDNH6mZckBdrIx0orEtZV\n     4bmp/YzhwvcubU4=;",
+            ),
+        },
+    ],
+}
