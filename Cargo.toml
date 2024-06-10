@@ -12,7 +12,8 @@ insta = { version = "1.38" }
 rstest = { version = "0.19" }
 
 [features]
-default = ["mail_parser", "alloc", "std"]
+default = ["alloc", "mail_parser", "static", "std"]
 std = []
 alloc = []
 mail_parser = ["dep:mail-parser"]
+static = []

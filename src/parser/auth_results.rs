@@ -2,12 +2,12 @@
 
 use logos::{Lexer, Logos};
 
+use crate::alloc_yes::AuthenticationResults;
 use crate::auth::{SmtpAuthResult, SmtpAuthResultCode};
 use crate::dkim::{DkimResult, DkimResultCode};
 use crate::error::AuthResultsError;
 use crate::iprev::{IpRevResult, IpRevResultCode};
 use crate::spf::{SpfResult, SpfResultCode};
-use crate::AuthenticationResults;
 
 mod comment;
 mod host_version;

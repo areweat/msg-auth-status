@@ -1,5 +1,5 @@
 ---
-source: src/lib.rs
+source: src/alloc_yes/auth_results.rs
 expression: "&status"
 ---
 MessageAuthStatus {

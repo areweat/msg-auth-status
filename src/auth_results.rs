@@ -1,32 +1,9 @@
-//! Parsed Authetication-Results Header
+//! Parsed Authetication-Results
 
-use crate::auth::{AuthProperty, SmtpAuthResult};
-use crate::dkim::{DkimProperty, DkimResult};
-use crate::iprev::{IpRevProperty, IpRevResult};
-use crate::spf::{SpfProperty, SpfResult};
-
-use crate::error::AuthResultsError;
-
-/// Parsed Authentication-Results
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct AuthenticationResults<'hdr> {
-    /// Relevant host to this record
-    pub host: Option<HostVersion<'hdr>>,
-    /// Parsed auth = .. records
-    pub smtp_auth_result: Vec<SmtpAuthResult<'hdr>>,
-    /// Parsed spf = .. records
-    pub spf_result: Vec<SpfResult<'hdr>>,
-    /// Parsed dkim = .. records
-    pub dkim_result: Vec<DkimResult<'hdr>>,
-    /// Parsed iprev = .. records
-    pub iprev_result: Vec<IpRevResult<'hdr>>,
-    /// Whether none was encountered denoting no result
-    pub none_done: bool,
-    /// Unparsed raw
-    pub raw: Option<&'hdr str>,
-    /// Parsing error if any
-    pub error: Option<AuthResultsError>,
-}
+use crate::auth::AuthProperty;
+use crate::dkim::DkimProperty;
+use crate::iprev::IpRevProperty;
+use crate::spf::SpfProperty;
 
 /// Host and version relating to the results
 #[derive(Clone, Debug, PartialEq)]
