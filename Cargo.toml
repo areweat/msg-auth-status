@@ -34,6 +34,9 @@ name = "conversion_auth_results"
 required-features = ["mail_parser", "alloc"]
 harness = false
 
+[package.metadata.docs.rs]
+features = ["verifier"]
+
 [features]
 default = ["alloc", "mail_parser", "static", "std"]
 std = []
