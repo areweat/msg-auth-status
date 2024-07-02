@@ -32,6 +32,7 @@ On 10700K test_data/from_gmail_to_arewe_at.eml as of 2024 June 10
 | `alloc_yes::DkimSignatures::from_mail_parser`                | [423.19 ns 424.95 ns 427.80 ns] |
 | `From<mail_parser::HeaderValue>` for `DkimSignature`         | [301.46 ns 302.05 ns 302.69 ns] | 
 | `From<mail_parser::HeaderValue>` for `AuthenticationResults` | [565.54 ns 567.40 ns 569.52 ns] |
+| `ReturnPathVerifier::from_alloc_yes()` over Parsed           | [85.396 ns 85.579 ns 85.787 ns] |
 
 ## See Also
 

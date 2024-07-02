@@ -1,0 +1,101 @@
+X-Spam-Status: No, score=3.11
+X-Spam-Result: FREEMAIL_FROM (0),
+	DKIM_ALLOW (-0.2),
+	RCVD_TLS_LAST (0),
+	FROM_EQ_ENVFROM (0),
+	DMARC_POLICY_ALLOW (-0.5),
+	TO_DN_NONE (0),
+	RCPT_COUNT_ONE (0),
+	XM_UA_NO_VERSION (0.01),
+	FORGED_RCVD_TRAIL (1),
+	ARC_NA (0),
+	DWL_DNSWL_NONE (0),
+	TO_MATCH_ENVRCPT_ALL (0),
+	DKIM_SIGNED (0),
+	PREVIOUSLY_DELIVERED (0),
+	RCVD_COUNT_THREE (0),
+	URIBL_BLOCKED (0),
+	MID_RHS_MATCH_FROMTLD (1),
+	RBL_SENDERSCORE (2),
+	SPF_ALLOW (-0.2),
+	FREEMAIL_ENVFROM (0),
+	FROM_NO_DN (0)
+Received: from wfout8-smtp.messagingengine.com (wfout8-smtp.messagingengine.com [64.147.123.151])
+	(using TLSv1.3 with cipher TLS13_AES_256_GCM_SHA384)
+	by mail.localhost.horse (Stalwart SMTP) with ESMTPS id 27C84168F001094;
+	Thu, 6 Jun 2024 22:08:47 +0000
+Authentication-Results: mail.localhost.horse;
+	dkim=fail header.d=fastmail.com header.s=fm1 header.b=iJjSseqs;
+	dkim=fail header.d=messagingengine.com header.s=fm1 header.b=V4+v/lTW;
+	spf=pass (mail.localhost.horse: domain of postmaster@wfout8-smtp.messagingengine.com designates 64.147.123.151 as permitted sender) smtp.helo=wfout8-smtp.messagingengine.com;
+	spf=pass (mail.localhost.horse: domain of past.job1295@fastmail.com designates 64.147.123.151 as permitted sender) smtp.mailfrom=past.job1295@fastmail.com;
+	iprev=pass policy.iprev=64.147.123.151;
+	dmarc=pass header.from=fastmail.com policy.dmarc=none
+Received-SPF: pass (mail.localhost.horse: domain of past.job1295@fastmail.com designates 64.147.123.151 as permitted sender)
+	receiver=mail.localhost.horse; client-ip=64.147.123.151; envelope-from="past.job1295@fastmail.com"; helo=wfout8-smtp.messagingengine.com;
+Return-Path: <past.job1295@fastmail.com>
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by mailfout.west.internal (Postfix) with ESMTP id 1FC491C00146
+	for <rust-sydney@arewe.at>; Thu,  6 Jun 2024 18:08:38 -0400 (EDT)
+Received: from imap53 ([10.202.2.103])
+  by compute4.internal (MEProxy); Thu, 06 Jun 2024 18:08:38 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
+	cc:content-type:content-type:date:date:from:from:in-reply-to
+	:message-id:mime-version:reply-to:subject:subject:to:to; s=fm1;
+	 t=1717711717; x=1717798117; bh=+PcDwCxRoef2jeinvITWa8LARNOcNr8z
+	C4ltRY0Q75c=; b=iJjSseqs+2fAkHZDv7lvc0OlxNORcsgocEhoV72Y0oIrnsJq
+	PWAePgRmiL5usHnyQufrk0466xPSkop2fQsTZwkethIX8IAjvethjsS/PmuHhy7Z
+	mMMiIr8qgErlLmv7lSETu3ILriGxexlR3chzuxnMXuZm+blh0JHiNi2TOty7Fgjr
+	1Wtd94jc3O7ktfpuoYOJ/oqUXtm80K+kjkgwA/ZJR2ofu2MZ46HP9Ats/OFKe2TX
+	fkQS/vAB0l0Qy3j5TarrAuTGGv5ex87o8toF45RMFxIx87fAsMrTFAIJ3xSeeaqC
+	Oo5mwseNt8LGoBKl+sSBGR2z5Uy6ry4Gcbz7DQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:message-id
+	:mime-version:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
+	1717711717; x=1717798117; bh=+PcDwCxRoef2jeinvITWa8LARNOcNr8zC4l
+	tRY0Q75c=; b=V4+v/lTWv46osTseC2jkUaeL51v1tr6Hxm7awblvx0MN3CosG/X
+	ZUNA9tatWo/qAL2LtVKo2jWI4GfpxLbBc3d7Iehs21foB3D4e8mW/hGj8mKWR87R
+	gHs3MP6Sc9ONpvluEfVchqem74rVBUoOq0HzJJ8rBlaVEX5CiHFxOu97w8XO9H9s
+	8uP8KNhKz5Rr4dv2UnMsLcp/9kCxrpx/Tnvn/uAW6M74/B7vJUze16FHLjShpNei
+	CuChwIqIQOJsiAS1Q45p0cAZyszDR+ilbJWSuWZYB1u4slUW4U2IfgdfbDFvoijp
+	g2LR1w6pPknBCgEtmhHP3jYyERERDNX8bew==
+X-ME-Sender: <xms:ZTNiZvbsPKfWlh04jqdUzs0Ukk8okm7b6AovPHQnSzygoVVpooFGcw>
+    <xme:ZTNiZuYElAAMUVITn9u5j7cyRGNbJilPEeD3UBFO-MnFJrj_fzZ0LWR75qU_FuJyL
+    p4yIXwc8cMDlHODDyU>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrvdelledgtdeiucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucenucfjughrpefofgggkfffhffvufgtsegrtderre
+    erredtnecuhfhrohhmpehprghsthdrjhhosgduvdelheesfhgrshhtmhgrihhlrdgtohhm
+    necuggftrfgrthhtvghrnhepfeehgefhffdtjeegueekuefhleeghfegffejtdfgledute
+    evhfehgefghfehvdelnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghi
+    lhhfrhhomhepphgrshhtrdhjohgsuddvleehsehfrghsthhmrghilhdrtghomh
+X-ME-Proxy: <xmx:ZTNiZh8S1SqXnTvSwqGngeFNJdJkQYbgSeBAgVJLZtY9JgueoPPqJg>
+    <xmx:ZTNiZlr9d4a9nU2hjnMoyGRdWJGRWb0i0JmbHq-oY3464lxvePizvA>
+    <xmx:ZTNiZqp_8eVmKA4-ZIVOD3Cm9ts7RlgQf_34L0N9vOhJhCmNUO3hhA>
+    <xmx:ZTNiZrSzJH5zM1IcxwV_6w2cAIc1dGHiq-tmdx6Tf0sw7HTl6wudQQ>
+    <xmx:ZTNiZhS0gOP8RQXFZz4o50s-RhsdySKLLNlDTdrh7zVjMGB-A31UEoHm>
+Feedback-ID: i35d941ae:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+	id 682C23640070; Thu,  6 Jun 2024 18:08:37 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.11.0-alpha0-497-g97f96844c-fm-20240526.001-g97f96844
+MIME-Version: 1.0
+Message-Id: <f1e29daf-34db-498c-a13e-b840331165b7@app.fastmail.com>
+Date: Fri, 07 Jun 2024 08:08:16 +1000
+From: past.job1295@fastmail.com
+To: rust-sydney@arewe.at
+Subject: This is a test
+Content-Type: multipart/alternative;
+ boundary=040de63bc2ba42068b7bc5b2b00bec9c
+
+--040de63bc2ba42068b7bc5b2b00bec9c
+Content-Type: text/plain
+
+I am the body.
+--040de63bc2ba42068b7bc5b2b00bec9c
+Content-Type: text/html
+
+<!DOCTYPE html><html><head><title></title><style type="text/css">p.MsoNormal,p.MsoNoSpacing{margin:0}</style></head><body><div>I am the body.</div></body></html>
+--040de63bc2ba42068b7bc5b2b00bec9c--

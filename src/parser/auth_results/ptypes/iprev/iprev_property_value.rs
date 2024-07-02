@@ -48,7 +48,7 @@ pub fn parse_iprev_policy_property_value<'hdr>(
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
                     Ok(_comment) => {}
-                    Err(e) => return Err(e),
+                    Err(e) => return Err(AuthResultsError::ParseComment(e)),
                 }
                 lexer.bump(comment_lexer.span().end);
             }
@@ -122,7 +122,7 @@ pub fn parse_iprev_smtp_property_value<'hdr>(
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
                     Ok(_comment) => {}
-                    Err(e) => return Err(e),
+                    Err(e) => return Err(AuthResultsError::ParseComment(e)),
                 }
                 lexer.bump(comment_lexer.span().end);
             }

@@ -44,7 +44,7 @@ pub struct AuthenticationResults<'hdr> {
 #[derive(Debug, Default)]
 pub struct MessageAuthStatus<'hdr> {
     /// Authentication-Results
-    auth_results: Vec<AuthenticationResults<'hdr>>,
+    pub auth_results: Vec<AuthenticationResults<'hdr>>,
 }
 
 /// Currently all errors are inside results - this may change in future

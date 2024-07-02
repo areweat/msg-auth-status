@@ -65,7 +65,7 @@ pub fn parse_auth_smtp_property_key<'hdr>(
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
                     Ok(_comment) => {}
-                    Err(e) => return Err(e),
+                    Err(e) => return Err(AuthResultsError::ParseComment(e)),
                 }
                 lexer.bump(comment_lexer.span().end);
             }

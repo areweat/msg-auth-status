@@ -39,6 +39,7 @@ pub mod error;
 // Authentication-Results & DKIM-Signature etc. pub types
 //---------------------------------------------------------
 
+pub mod addr;
 pub mod auth;
 pub mod auth_results;
 pub mod dkim;
@@ -49,7 +50,7 @@ pub mod spf;
 // Parsing implementations with type conversions
 //--------------------------------------------------------
 
-mod parser;
+pub(crate) mod parser;
 
 //--------------------------------------------------------
 // Allocating Public convenience API
@@ -59,7 +60,7 @@ mod parser;
 pub mod alloc_yes;
 
 //--------------------------------------------------------
-// Non-Allocating Public convenience API
+// WIP - Non-Allocating Public convenience API
 //--------------------------------------------------------
 
 #[cfg(feature = "static")]
