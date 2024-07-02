@@ -33,7 +33,7 @@ pub fn parse_version<'hdr>(
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
                     Ok(_comment) => {}
-                    Err(e) => return Err(e),
+                    Err(e) => return Err(AuthResultsError::ParseComment(e)),
                 }
                 *lexer = VersionToken::lexer(comment_lexer.remainder());
             }

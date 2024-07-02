@@ -31,7 +31,7 @@ pub fn parse_unknown<'hdr>(
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 let _comment = match parse_comment(&mut comment_lexer) {
                     Ok(comment) => comment,
-                    Err(e) => return Err(e),
+                    Err(e) => return Err(AuthResultsError::ParseComment(e)),
                 };
                 lexer.bump(comment_lexer.span().end);
                 res_end = Some(lexer.span().end);

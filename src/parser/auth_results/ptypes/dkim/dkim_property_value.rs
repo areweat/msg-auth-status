@@ -65,7 +65,7 @@ pub fn parse_dkim_header_property_value<'hdr>(
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 match parse_comment(&mut comment_lexer) {
                     Ok(_comment) => {}
-                    Err(e) => return Err(e),
+                    Err(e) => return Err(AuthResultsError::ParseComment(e)),
                 }
                 lexer.bump(comment_lexer.span().end);
             }
@@ -139,7 +139,7 @@ pub fn parse_dkim_policy_property_value<'hdr>(
                 let mut comment_lexer = CommentToken::lexer(lexer.remainder());
                 let _comment = match parse_comment(&mut comment_lexer) {
                     Ok(comment) => comment,
-                    Err(e) => return Err(e),
+                    Err(e) => return Err(AuthResultsError::ParseComment(e)),
                 };
                 lexer.bump(comment_lexer.span().end);
             }

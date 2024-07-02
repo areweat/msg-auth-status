@@ -28,6 +28,8 @@ pub enum AuthResultsError<'hdr> {
     NoHeader,
     /// Unknown parsing error
     Parse,
+    /// Comment parsing error
+    ParseComment(CommentError<'hdr>),
     /// Host parsing error
     ParseHost(String),
     /// Bug
@@ -182,4 +184,54 @@ impl From<DkimVersionError> for DkimTagValueError {
     fn from(e: DkimVersionError) -> Self {
         Self::Version(e)
     }
+}
+
+/// Comment errors
+#[derive(Clone, Debug, PartialEq)]
+pub enum CommentError<'hdr> {
+    /// None found
+    RunAway,
+    /// Detailed with ParsingDetail
+    ParsingDetailed(ParsingDetail<'hdr>),
+}
+
+/// Quoted value parsing error
+#[derive(Clone, Debug, PartialEq)]
+pub enum QuotedError<'hdr> {
+    /// Bug
+    Bug,
+    /// None found
+    RunAway,
+    /// Detailed with ParsingDetail    
+    ParsingDetailed(ParsingDetail<'hdr>),
+}
+
+/// Addr-Spec parsing errors
+#[derive(Clone, Debug, PartialEq)]
+pub enum AddrSpecError<'hdr> {
+    /// Local part not found
+    NoAssociatedLocalPart,
+    /// Domain not found
+    NoAssociatedDomain,
+    /// None found
+    NoAssociatedAddrSpec,
+    /// Detailed with ParsingDetail
+    ParsingDetailed(ParsingDetail<'hdr>),
+    /// Parsing failed at comment
+    ParseComment(CommentError<'hdr>),
+    /// Parsing display name failed
+    ParseDisplayName(QuotedError<'hdr>),
+}
+
+/// Return-Path verifier errors
+#[derive(Debug, PartialEq)]
+pub enum ReturnPathVerifierError<'hdr> {
+    /// Bug encountered with attempted verify - selector didn't match error / success
+    BugSelectorFalse,
+    /// Encountered multiple Return-Path headers
+    MultipleNotAllowed,
+    /// Return-Path header not present
+    NoHeader,
+    /// Invalid Return Path
+    InvalidHeader(AddrSpecError<'hdr>),
 }

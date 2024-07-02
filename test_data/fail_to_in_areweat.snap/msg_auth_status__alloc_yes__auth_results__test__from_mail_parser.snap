@@ -1,0 +1,101 @@
+---
+source: src/alloc_yes/auth_results.rs
+expression: "&status"
+---
+MessageAuthStatus {
+    auth_results: [
+        AuthenticationResults {
+            host: Some(
+                HostVersion {
+                    host: "mail.localhost.horse",
+                    version: None,
+                },
+            ),
+            smtp_auth_result: [],
+            spf_result: [
+                SpfResult {
+                    code: Pass,
+                    reason: None,
+                    smtp_mailfrom: None,
+                    smtp_helo: Some(
+                        "wfout8-smtp.messagingengine.com",
+                    ),
+                    raw: Some(
+                        "spf=pass (mail.localhost.horse: domain of postmaster@wfout8-smtp.messagingengine.com designates 64.147.123.151 as permitted sender) smtp.helo=wfout8-smtp.messagingengine.com",
+                    ),
+                },
+                SpfResult {
+                    code: Pass,
+                    reason: None,
+                    smtp_mailfrom: Some(
+                        "past.job1295@fastmail.com",
+                    ),
+                    smtp_helo: None,
+                    raw: Some(
+                        "spf=pass (mail.localhost.horse: domain of past.job1295@fastmail.com designates 64.147.123.151 as permitted sender) smtp.mailfrom=past.job1295@fastmail.com",
+                    ),
+                },
+            ],
+            dkim_result: [
+                DkimResult {
+                    code: Fail,
+                    reason: None,
+                    header_d: Some(
+                        "fastmail.com",
+                    ),
+                    header_i: None,
+                    header_b: Some(
+                        "iJjSseqs",
+                    ),
+                    header_a: None,
+                    header_s: Some(
+                        "fm1",
+                    ),
+                    raw: Some(
+                        "dkim=fail header.d=fastmail.com header.s=fm1 header.b=iJjSseqs",
+                    ),
+                },
+                DkimResult {
+                    code: Fail,
+                    reason: None,
+                    header_d: Some(
+                        "messagingengine.com",
+                    ),
+                    header_i: None,
+                    header_b: Some(
+                        "V4+v/lTW",
+                    ),
+                    header_a: None,
+                    header_s: Some(
+                        "fm1",
+                    ),
+                    raw: Some(
+                        "dkim=fail header.d=messagingengine.com header.s=fm1 header.b=V4+v/lTW",
+                    ),
+                },
+            ],
+            iprev_result: [
+                IpRevResult {
+                    code: Pass,
+                    reason: None,
+                    policy_iprev: Some(
+                        "64.147.123.151",
+                    ),
+                    raw: Some(
+                        "iprev=pass policy.iprev=64.147.123.151",
+                    ),
+                },
+            ],
+            unknown_result: [
+                UnknownResult {
+                    raw: "dmarc=pass header.from=fastmail.com policy.dmarc=none",
+                },
+            ],
+            none_done: false,
+            raw: Some(
+                "mail.localhost.horse;\n\tdkim=fail header.d=fastmail.com header.s=fm1 header.b=iJjSseqs;\n\tdkim=fail header.d=messagingengine.com header.s=fm1 header.b=V4+v/lTW;\n\tspf=pass (mail.localhost.horse: domain of postmaster@wfout8-smtp.messagingengine.com designates 64.147.123.151 as permitted sender) smtp.helo=wfout8-smtp.messagingengine.com;\n\tspf=pass (mail.localhost.horse: domain of past.job1295@fastmail.com designates 64.147.123.151 as permitted sender) smtp.mailfrom=past.job1295@fastmail.com;\n\tiprev=pass policy.iprev=64.147.123.151;\n\tdmarc=pass header.from=fastmail.com policy.dmarc=none",
+            ),
+            errors: [],
+        },
+    ],
+}

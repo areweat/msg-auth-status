@@ -11,7 +11,6 @@ use crate::spf::{SpfResult, SpfResultCode};
 
 use crate::alloc_yes::UnknownResult;
 
-mod comment;
 mod host_version;
 mod policy;
 mod ptypes;
@@ -19,7 +18,7 @@ mod reason;
 mod unknown;
 mod version;
 
-use comment::{parse_comment, CommentToken};
+use crate::parser::comment::{parse_comment, CommentToken};
 use host_version::{parse_host_version, HostVersionToken};
 use policy::{parse_policy, PolicyToken};
 use ptypes::{parse_ptype_properties, PtypeToken};
@@ -424,7 +423,7 @@ impl<'hdr> From<&'hdr HeaderValue<'hdr>> for AuthenticationResults<'hdr> {
                     match parse_comment(&mut comment_lexer) {
                         Ok(_comment) => {} // TODO: keep comments?
                         Err(e) => {
-                            res.errors.push(e);
+                            res.errors.push(AuthResultsError::ParseComment(e));
                             break;
                         }
                     }

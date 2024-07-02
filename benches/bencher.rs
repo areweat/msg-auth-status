@@ -12,6 +12,9 @@ fn load_test_data(file_location: &str) -> Vec<u8> {
 use msg_auth_status::alloc_yes::DkimSignatures;
 use msg_auth_status::alloc_yes::MessageAuthStatus;
 
+#[cfg(feature = "verifier")]
+use msg_auth_status::alloc_yes::ReturnPathVerifier;
+
 use mail_parser::HeaderValue;
 use msg_auth_status::alloc_yes::AuthenticationResults;
 use msg_auth_status::dkim::DkimSignature;
@@ -58,6 +61,16 @@ fn criterion_benchmark(c: &mut Criterion) {
             })
         },
     );
+
+    #[cfg(feature = "verifier")]
+    let status = MessageAuthStatus::from_mail_parser(&parsed_message).unwrap();
+    #[cfg(feature = "verifier")]
+    c.bench_function("ReturnPathVerifier::from_alloc_yes()", |b| {
+        b.iter(|| {
+            let _verifier =
+                ReturnPathVerifier::from_alloc_yes(black_box(&status), &parsed_message).unwrap();
+        })
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);
