@@ -7,12 +7,18 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![MSRV](https://img.shields.io/badge/MSRV-1.70.0-blue)
 
-Parser for Message-Authenticated-Status and the associated DKIM-Signatures.
+Parser & Verifier for Message-Authenticated-Status and the associated DKIM-Signatures.
 
-## Add
+## Add without Verifier
 
 ```ignore
 cargo add msg-auth-status
+```
+
+## Add with Verifier
+
+```ignore
+cargo add msg-auth-status --features verifier
 ```
 
 ## RFCs

@@ -1,8 +1,8 @@
 [package]
 name = "msg-auth-status"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-description = "Parser for Message Authentication Status - DKIM-Signature and Authentication-Results"
+description = "Parser & Verifier for Message Authentication Status - DKIM-Signature and Authentication-Results"
 homepage = "https://github.com/areweat/msg-auth-status"
 keywords = ["mail", "dkim", "authentication", "parser"]
 license = "Apache-2.0/MIT"
